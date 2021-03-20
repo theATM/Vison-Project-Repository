@@ -4,6 +4,8 @@ Repozytorium projektu inżunierskiego, aplikacji do rozpoznawania polskich bankn
 
 Autorzy:
 
+
+
 Aleksander Madajczak 
 Kamil Pokornicki
 Karol Dziki
