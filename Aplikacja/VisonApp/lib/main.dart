@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:core';
 import 'dart:io';
 import 'package:camera/camera.dart';
+//import 'package:flutter_better_camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 import 'package:soundpool/soundpool.dart';
 import 'package:flutter_flashlight/flutter_flashlight.dart';
+
+
 
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
@@ -57,7 +60,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   List<String> money = ["10", "20", "50", "100", "200", "500", "None"];
   List<int> _currentPredictionsList = new List.generate(8, (int index) => 0);
   int maxCorrectPredictionsInSequence =
-      4; // this is arbitrary and can be changed.
+  4; // this is arbitrary and can be changed.
   String defaultDisplayMessage = "Skieruj kamerę na banknot!";
   String currentDisplayMessage = "";
   bool hasDetectedPrediction = false;
@@ -147,7 +150,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       }
     }
   }
-  
+
   void checkFlashlightOption() async {
     if (await Flashlight.hasFlashlight) {
       this.hasFlash = true;
@@ -184,13 +187,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     this.vibrationmap["200"] = [0, 1000, 300, 1000, 300, 1000];
     this.vibrationmap["500"] = [0, 3000];
   }
-  
-  void setFlashlight(bool xd){
-    if(xd) {
-      Flashlight.lightOn();
-    }
-    else Flashlight.lightOff();
-  }
 
   @override
   void initState() {
@@ -211,7 +207,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     this.currentDisplayMessage = defaultDisplayMessage;
     this.loadSoundAssets();
     this.loadVibrationOptions();
-    this.setFlashlight(true);
+    _controller.setFlashMode(FlashMode.always);
 
     platform.setMethodCallHandler((MethodCall call) async {
       if (call.method == "predictionResult") {
@@ -251,6 +247,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     _initializeControllerFuture.then((x) {
       _controller.startImageStream((CameraImage availableImage) async {
         if (busy) return;
+
         frames = 0;
         await _getPrediction(availableImage);
       });
@@ -270,9 +267,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     return Scaffold(
       appBar: AppBar(
           title: Text(
-        this.currentDisplayMessage,
-        textScaleFactor: 1.4,
-      )),
+            this.currentDisplayMessage,
+            textScaleFactor: 1.4,
+          )),
       // Wait until the controller is initialized before displaying the
       // camera preview. Use a FutureBuilder to display a loading spinner
       // until the controller has finished initializing.
