@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 import 'package:soundpool/soundpool.dart';
+import 'package:flutter_flashlight/flutter_flashlight.dart';
 
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
@@ -66,6 +67,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   Map vibrationmap = new Map();
   // sound
   Map soundmap = new Map();
+  // flashlight
+  bool hasFlash = false;
 
   void predictionActions(String value) async {
     // play sound depending on value.
@@ -144,6 +147,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       }
     }
   }
+  
+  void checkFlashlightOption() async {
+    if (await Flashlight.hasFlashlight) {
+      this.hasFlash = true;
+    }
+  }
 
   void loadSoundAssets() async {
     this.soundpool = Soundpool(streamType: StreamType.music);
@@ -175,6 +184,13 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     this.vibrationmap["200"] = [0, 1000, 300, 1000, 300, 1000];
     this.vibrationmap["500"] = [0, 3000];
   }
+  
+  void setFlashlight(bool xd){
+    if(xd) {
+      Flashlight.lightOn();
+    }
+    else Flashlight.lightOff();
+  }
 
   @override
   void initState() {
@@ -191,9 +207,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     _initializeControllerFuture = _controller.initialize();
 
     this.checkDeviceVibrationOptions();
+    this.checkFlashlightOption();
     this.currentDisplayMessage = defaultDisplayMessage;
     this.loadSoundAssets();
     this.loadVibrationOptions();
+    this.setFlashlight(true);
 
     platform.setMethodCallHandler((MethodCall call) async {
       if (call.method == "predictionResult") {
