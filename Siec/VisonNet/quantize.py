@@ -195,6 +195,7 @@ if __name__ == '__main__':
 
     # qnnpack - works for ARM # fbgemm - works for x86 (end device)
     torch.backends.quantized.engine = 'qnnpack' #atm - it gives memorry error to me
+    #KP - Oh no
 
     white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
     white_list.remove(torch.nn.modules.linear.Linear)
