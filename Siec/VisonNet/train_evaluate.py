@@ -13,7 +13,7 @@ from torch.optim import lr_scheduler
 from PIL import Image
 
 BEST_MODEL_PATH = './best_model.pth'
-
+MAX_EPOCH_NUMBER = 105
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     best_acc = 0
     model = model.to(torch.device('cpu'))
     
-    for nepoch in range(105):
+    for nepoch in range(MAX_EPOCH_NUMBER):
         model = model.to(torch.device('cpu'))
         model.train()
         train_one_epoch(model, criterion, optimizer, trainloader, torch.device('cpu'))

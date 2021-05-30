@@ -207,7 +207,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     this.currentDisplayMessage = defaultDisplayMessage;
     this.loadSoundAssets();
     this.loadVibrationOptions();
-    _controller.setFlashMode(FlashMode.always);
+    _controller.setFlashMode(FlashMode.torch);
+
 
     platform.setMethodCallHandler((MethodCall call) async {
       if (call.method == "predictionResult") {

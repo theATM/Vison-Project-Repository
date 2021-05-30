@@ -13,7 +13,7 @@ from torch.optim import lr_scheduler
 import time
 
 
-BEST_MODEL_PATH = './quant_mobilenet/best_model.pth'
+BEST_MODEL_PATH = './best_model.pth' #atm I changed from: './quant_mobilenet/best_model.pth'
 
 
 class AverageMeter(object):
@@ -151,9 +151,9 @@ if __name__ == '__main__':
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
 
     model = create_combined_model(original_model)
-    #print(model)
-    #for name, param in model.named_parameters():
-    #    print(name)
+    print(model)
+    for name, param in model.named_parameters():
+        print(name)
     
     criterion = nn.CrossEntropyLoss()
 
@@ -188,12 +188,14 @@ if __name__ == '__main__':
                    ['7.1.conv2', '7.1.bn2']]
     
     model = add_quant_stubs(model)
-    #print(model)
+    print(model)
 
     model = torch.quantization.fuse_modules(model, modules_to_fuse)
-    #print(model)
-    
-    torch.backends.quantized.engine = 'qnnpack'
+    print(model)
+
+    # qnnpack - works for ARM # fbgemm - works for x86 (end device)
+    torch.backends.quantized.engine = 'qnnpack' #atm - it gives memorry error to me
+
     white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
     white_list.remove(torch.nn.modules.linear.Linear)
     qconfig_dict = dict()
@@ -201,11 +203,11 @@ if __name__ == '__main__':
         qconfig_dict[e] = torch.quantization.get_default_qconfig('qnnpack')
 
     torch.quantization.propagate_qconfig_(model, qconfig_dict=qconfig_dict)
-    #print(model.qconfig)
+    print(model.qconfig)
 
     torch.quantization.prepare(model, inplace=True)
     model.eval()
-    #print(model)
+    print(model)
 
     with torch.no_grad():
         for i, data in enumerate(trainloader, 0):
@@ -213,7 +215,7 @@ if __name__ == '__main__':
             model(inputs)
 
     torch.quantization.convert(model, inplace=True)
-    #print(model)
+    print(model)
 
     best_acc = 0
     num_train_batches = 8
