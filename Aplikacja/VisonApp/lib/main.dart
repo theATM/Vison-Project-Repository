@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:core';
 import 'dart:io';
 import 'package:camera/camera.dart';
-//import 'package:flutter_better_camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 import 'package:soundpool/soundpool.dart';
 import 'package:flutter_flashlight/flutter_flashlight.dart';
+
 
 
 
@@ -21,7 +21,6 @@ Future<void> main() async {
 
   // Get a specific camera from the list of available cameras.
   final firstCamera = cameras.first;
-
   runApp(
     MaterialApp(
       theme: ThemeData.dark(),
@@ -32,6 +31,7 @@ Future<void> main() async {
     ),
   );
 }
+
 
 // A screen that allows users to take a picture using a given camera.
 class TakePictureScreen extends StatefulWidget {
@@ -57,10 +57,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   int _iter = 0;
   bool busy = false;
   // displaying values
+
   List<String> money = ["10", "20", "50", "100", "200", "500", "None"];
   List<int> _currentPredictionsList = new List.generate(8, (int index) => 0);
   int maxCorrectPredictionsInSequence =
-  4; // this is arbitrary and can be changed.
+      4; // this is arbitrary and can be changed.
   String defaultDisplayMessage = "Skieruj kamerę na banknot!";
   String currentDisplayMessage = "";
   bool hasDetectedPrediction = false;
@@ -72,6 +73,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   Map soundmap = new Map();
   // flashlight
   bool hasFlash = false;
+  bool flashlight = false;
+  int _flashIter = 0;
 
   void predictionActions(String value) async {
     // play sound depending on value.
@@ -82,6 +85,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     }
   }
 
+
+
   void updatePredictionMessage(int prediction) async {
     // if has detected prediction previously, do nothing.
     if (this.hasDetectedPrediction) {
@@ -90,6 +95,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
     if (this.money[_prediction] == 'None') {
       this.currentDisplayMessage = defaultDisplayMessage;
+
     } else {
       predictionActions(this.money[_prediction]);
       setState(() {
@@ -103,6 +109,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     var framesU = cameraImage.planes[1].bytes;
     var framesV = cameraImage.planes[2].bytes;
 
+
+
+
     double yValue = 0.0;
     //double uValue = 0.0;
     //double vValue = 0.0;
@@ -113,7 +122,22 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
     debugPrint('Y mean:  $yValue');
 
-    if (yValue < 15) {
+    if (this.hasFlash) {
+
+      if (yValue < 30 && flashlight == false){
+        flashlight = true;
+        _flashIter = 30;
+      } else if (yValue > 70 && flashlight == true){
+        _flashIter = _flashIter - 1;
+      }
+
+      if (flashlight == true && _flashIter == 0){
+        flashlight = false;
+      }
+
+    }
+
+    /*if (yValue < 15) {
       setState(() {
         busy = true;
       });
@@ -122,7 +146,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         busy = false;
       });
       return;
-    }
+    }*/
 
     try {
       platform.invokeMethod('getPrediction', <String, dynamic>{
@@ -151,11 +175,13 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     }
   }
 
-  void checkFlashlightOption() async {
-    if (await Flashlight.hasFlashlight) {
+  void checkFlashlightOptions() async {
+    if (await Flashlight.hasFlashlight){
       this.hasFlash = true;
     }
   }
+
+
 
   void loadSoundAssets() async {
     this.soundpool = Soundpool(streamType: StreamType.music);
@@ -203,14 +229,14 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     _initializeControllerFuture = _controller.initialize();
 
     this.checkDeviceVibrationOptions();
-    this.checkFlashlightOption();
     this.currentDisplayMessage = defaultDisplayMessage;
     this.loadSoundAssets();
     this.loadVibrationOptions();
-    _controller.setFlashMode(FlashMode.torch);
-
+    this.checkFlashlightOptions();
 
     platform.setMethodCallHandler((MethodCall call) async {
+
+
       if (call.method == "predictionResult") {
         final args = call.arguments;
         int currentPrediction = args["result"];
@@ -236,6 +262,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
           this.updatePredictionMessage(this._prediction);
           this.hasDetectedPrediction = true;
         }
+        if (this.flashlight) {
+          _controller.setFlashMode(FlashMode.torch);
+        } else _controller.setFlashMode(FlashMode.off);
 
         setState(() {
           _iter = _iter + 1;
@@ -268,9 +297,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     return Scaffold(
       appBar: AppBar(
           title: Text(
-            this.currentDisplayMessage,
-            textScaleFactor: 1.4,
-          )),
+        this.currentDisplayMessage,
+        textScaleFactor: 1.4,
+      )),
       // Wait until the controller is initialized before displaying the
       // camera preview. Use a FutureBuilder to display a loading spinner
       // until the controller has finished initializing.
