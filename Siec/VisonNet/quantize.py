@@ -161,14 +161,14 @@ if __name__ == '__main__':
 
     best_acc = 0
     num_train_batches = 8
-    model = model.to(torch.device('cpu'))
+    model = model.to(torch.device('cuda'))
     model.eval()
 
     # float evaluate
     #top1, top5 = evaluate(model, criterion, testloader, torch.device('cuda'))
     #print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
 
-    model = model.to(torch.device('cpu'))
+    model = model.to(torch.device('cuda'))
     modules_to_fuse = [['1', '2'],
                    ['5.0.conv1', '5.0.bn1'],
                    ['5.0.conv2', '5.0.bn2'],
@@ -192,11 +192,15 @@ if __name__ == '__main__':
 
     model = torch.quantization.fuse_modules(model, modules_to_fuse)
     print(model)
-
+    print("Trying to pass mem error")
     # qnnpack - works for ARM # fbgemm - works for x86 (end device)
-    torch.backends.quantized.engine = 'qnnpack' #atm - it gives memorry error to me
-    #KP - Oh no
-
+    try:
+        torch.backends.quantized.engine = 'qnnpack' #atm - it gives memorry error to me
+    except Exception as e:
+        # KP - Oh no
+        print(e)
+        exit(-1)
+    print("mem error passed hurray!")
     white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
     white_list.remove(torch.nn.modules.linear.Linear)
     qconfig_dict = dict()
@@ -220,9 +224,9 @@ if __name__ == '__main__':
 
     best_acc = 0
     num_train_batches = 8
-    model = model.to(torch.device('cpu'))
+    model = model.to(torch.device('cuda'))
     model.eval()
-    top1, top5 = evaluate(model, criterion, testloader, torch.device('cpu'))
+    top1, top5 = evaluate(model, criterion, testloader, torch.device('cuda'))
 
     print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
 
