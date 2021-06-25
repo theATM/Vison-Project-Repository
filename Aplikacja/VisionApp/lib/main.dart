@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 import 'package:soundpool/soundpool.dart';
-import 'package:flutter_flashlight/flutter_flashlight.dart';
+//import 'package:flutter_flashlight/flutter_flashlight.dart';
 
 
 
@@ -122,7 +122,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
     debugPrint('Y mean:  $yValue');
 
-    if (this.hasFlash) {
+    if (true) {
 
       if (yValue < 30 && flashlight == false){
         flashlight = true;
@@ -175,12 +175,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     }
   }
 
-  void checkFlashlightOptions() async {
+  /*void checkFlashlightOptions() async {
     if (await Flashlight.hasFlashlight){
       this.hasFlash = true;
     }
   }
-
+*/
 
 
   void loadSoundAssets() async {
@@ -232,7 +232,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     this.currentDisplayMessage = defaultDisplayMessage;
     this.loadSoundAssets();
     this.loadVibrationOptions();
-    this.checkFlashlightOptions();
+    //this.checkFlashlightOptions();
 
     platform.setMethodCallHandler((MethodCall call) async {
 
