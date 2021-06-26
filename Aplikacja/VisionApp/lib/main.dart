@@ -126,7 +126,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
       if (yValue < 30 && flashlight == false){
         flashlight = true;
-        _flashIter = 30;
+        _flashIter = 20;
       } else if (yValue > 70 && flashlight == true){
         _flashIter = _flashIter - 1;
       }
