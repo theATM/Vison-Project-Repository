@@ -12,8 +12,7 @@ from torch.optim import lr_scheduler
 
 import time
 
-
-BEST_MODEL_PATH = './best_model.pth' #atm I changed from: './quant_mobilenet/best_model.pth'
+BEST_MODEL_PATH = './best_model.pth'  # atm I changed from: './quant_mobilenet/best_model.pth'
 
 BACKEND_ENGINE = ''
 if 'qnnpack' in torch.backends.quantized.supported_engines:
@@ -25,8 +24,11 @@ else:
     print("No Proper Backend Engine found")
     exit(-1)
 
+DO_EVALUATE = False
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self, name, fmt=':f'):
         self.name = name
         self.fmt = fmt
@@ -48,67 +50,68 @@ class AverageMeter(object):
         fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
         return fmtstr.format(**self.__dict__)
 
+
 def create_combined_model(model_fe):
-  model_fe_features = nn.Sequential(
-    model_fe.conv1,
-    model_fe.bn1,
-    model_fe.relu,
-    model_fe.maxpool,
-    model_fe.layer1,
-    model_fe.layer2,
-    model_fe.layer3,
-    #model_fe.layer4,# without this
-    model_fe.avgpool,
-  )
+    model_fe_features = nn.Sequential(
+        model_fe.conv1,
+        model_fe.bn1,
+        model_fe.relu,
+        model_fe.maxpool,
+        model_fe.layer1,
+        model_fe.layer2,
+        model_fe.layer3,
+        # model_fe.layer4,# without this
+        model_fe.avgpool,
+    )
 
-  new_head = nn.Sequential(
-    nn.Dropout(p=0.5),
-    nn.Linear(256, 7),
-  )
+    new_head = nn.Sequential(
+        nn.Dropout(p=0.5),
+        nn.Linear(256, 7),
+    )
 
-  new_model = nn.Sequential(
-    model_fe_features,
-    nn.Flatten(1),
-    new_head,
-  )
-  return new_model
-
+    new_model = nn.Sequential(
+        model_fe_features,
+        nn.Flatten(1),
+        new_head,
+    )
+    return new_model
 
 
 def add_quant_stubs(model_fe):
-  new_model = nn.Sequential(
-    torch.quantization.QuantStub(),
-    model_fe[0][0],
-    model_fe[0][1],
-    model_fe[0][2],
-    model_fe[0][3],
-    nn.Sequential(
-        model_fe[0][4][0],
-        model_fe[0][4][1],
-    ),
-    nn.Sequential(
-        model_fe[0][5][0],
-        model_fe[0][5][1],
-    ),
-    nn.Sequential(
-        model_fe[0][6][0],
-        model_fe[0][6][1],
-    ),
-    model_fe[0][7],
-    model_fe[1],
-    torch.quantization.DeQuantStub(),
-    model_fe[2],
-  )
+    new_model = nn.Sequential(
+        torch.quantization.QuantStub(),
+        model_fe[0][0],
+        model_fe[0][1],
+        model_fe[0][2],
+        model_fe[0][3],
+        nn.Sequential(
+            model_fe[0][4][0],
+            model_fe[0][4][1],
+        ),
+        nn.Sequential(
+            model_fe[0][5][0],
+            model_fe[0][5][1],
+        ),
+        nn.Sequential(
+            model_fe[0][6][0],
+            model_fe[0][6][1],
+        ),
+        model_fe[0][7],
+        model_fe[1],
+        torch.quantization.DeQuantStub(),
+        model_fe[2],
+    )
 
-  return new_model
-  
+    return new_model
+
+
 def evaluate(model, criterion, data_loader, device):
     model.eval()
-    confusion_matrix = torch.zeros(7,7)
+    confusion_matrix = torch.zeros(7, 7)
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
 
-    with torch.no_grad():    
+    with torch.no_grad():
         for i, data in enumerate(data_loader, 0):
             inputs, labels = data['image'], data['class']
             inputs = inputs.to(device)
@@ -145,17 +148,18 @@ def accuracy(output, target, topk=(1,)):
 
 if __name__ == '__main__':
 
-    transform_test  = transforms.Compose([transforms.ToPILImage(),
-                                          transforms.Resize(224),
-                                          transforms.CenterCrop((224,224)),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703]),])
+    transform_test = transforms.Compose([transforms.ToPILImage(),
+                                         transforms.Resize(224),
+                                         transforms.CenterCrop((224, 224)),
+                                         transforms.ToTensor(),
+                                         transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701],
+                                                              std=[0.24467267, 0.23742135, 0.24701703]), ])
 
     testset = Bankset("testset", transform_test)
-    testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=0)
+    testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=8)
 
     trainset = Bankset("dataset", transform_test)
-    trainloader = DataLoader(trainset, batch_size=4, shuffle=True, num_workers=0)
+    trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=8)
 
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
 
@@ -163,7 +167,7 @@ if __name__ == '__main__':
     print(model)
     for name, param in model.named_parameters():
         print(name)
-    
+
     criterion = nn.CrossEntropyLoss()
 
     model.load_state_dict(torch.load(BEST_MODEL_PATH))
@@ -173,29 +177,29 @@ if __name__ == '__main__':
     model = model.to(torch.device('cpu'))
     model.eval()
 
-    # float evaluate
-    #top1, top5 = evaluate(model, criterion, testloader, torch.device('cuda'))
-    #print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
+    if DO_EVALUATE:
+        top1, top5 = evaluate(model, criterion, testloader, torch.device('cpu'))
+        print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
 
     model = model.to(torch.device('cpu'))
     modules_to_fuse = [['1', '2'],
-                   ['5.0.conv1', '5.0.bn1'],
-                   ['5.0.conv2', '5.0.bn2'],
-                   ['5.1.conv1', '5.1.bn1'],
-                   ['5.1.conv2', '5.1.bn2'],
+                       ['5.0.conv1', '5.0.bn1'],
+                       ['5.0.conv2', '5.0.bn2'],
+                       ['5.1.conv1', '5.1.bn1'],
+                       ['5.1.conv2', '5.1.bn2'],
 
-                   ['6.0.conv1', '6.0.bn1'],
-                   ['6.0.conv2', '6.0.bn2'],
-                   ['6.0.downsample.0', '6.0.downsample.1'],
-                   ['6.1.conv1', '6.1.bn1'],
-                   ['6.1.conv2', '6.1.bn2'],
+                       ['6.0.conv1', '6.0.bn1'],
+                       ['6.0.conv2', '6.0.bn2'],
+                       ['6.0.downsample.0', '6.0.downsample.1'],
+                       ['6.1.conv1', '6.1.bn1'],
+                       ['6.1.conv2', '6.1.bn2'],
 
-                   ['7.0.conv1', '7.0.bn1'],
-                   ['7.0.conv2', '7.0.bn2'],
-                   ['7.0.downsample.0', '7.0.downsample.1'],
-                   ['7.1.conv1', '7.1.bn1'],
-                   ['7.1.conv2', '7.1.bn2']]
-    
+                       ['7.0.conv1', '7.0.bn1'],
+                       ['7.0.conv2', '7.0.bn2'],
+                       ['7.0.downsample.0', '7.0.downsample.1'],
+                       ['7.1.conv1', '7.1.bn1'],
+                       ['7.1.conv2', '7.1.bn2']]
+
     model = add_quant_stubs(model)
     print(model)
 
@@ -204,9 +208,9 @@ if __name__ == '__main__':
     print("Trying to pass mem error")
 
     # qnnpack - works for ARM # fbgemm - works for x86
-    if BACKEND_ENGINE =='qnnpack':
+    if BACKEND_ENGINE == 'qnnpack':
         print("Using qnnpack backend engine")
-        torch.backends.quantized.engine = 'qnnpack' #atm - not working in windows 10
+        torch.backends.quantized.engine = 'qnnpack'  # atm - not working in windows 10
 
         white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
         white_list.remove(torch.nn.modules.linear.Linear)
@@ -220,30 +224,33 @@ if __name__ == '__main__':
 
         print(model)
 
-        with torch.no_grad():
-            for i, data in enumerate(trainloader, 0):
-                inputs, labels = data['image'], data['class']
-                model(inputs)
+        #print("\nStarting Quantizising Imputs")
+        #with torch.no_grad():
+        #    for i, data in enumerate(trainloader, 0):
+        #        if i % 1000 == 0 : print("Progress = " , i)
+        #        inputs, labels = data['image'], data['class']
+        #        model(inputs)
+        print("Imputs Quantized")
 
         torch.quantization.convert(model, inplace=True)
         print("Model Quantized")
 
     elif BACKEND_ENGINE == 'fbgemm':
         # KP - Oh no
-        #ATM - Work in progress
+        # ATM - Work in progress
         print("Using fbgemm backend engine")
         torch.backends.quantized.engine = 'fbgemm'
-        allow_list = torch.quantization.
-        #allow_list.remove(torch.nn.modules.linear.Linear)
-        #qconfig_dict = dict()
-        #for e in allow_list:
+        #allow_list = torch.quantization.
+        # allow_list.remove(torch.nn.modules.linear.Linear)
+        # qconfig_dict = dict()
+        # for e in allow_list:
         #    qconfig_dict[e] = torch.quantization.get_default_qconfig('fbgemm')
 
         qconfig_dict = {"ModuleName": torch.quantization.get_default_qconfig()}
 
         torch.quantization.propagate_qconfig_(model,
                                               qconfig_dict=torch.quantization.prepare(model=model,
-                                                                                             qconfig_dict=qconfig_dict))
+                                                                                      qconfig_dict=qconfig_dict))
         torch.quantization.prepare(model, inplace=True)
 
         with torch.no_grad():
@@ -254,22 +261,18 @@ if __name__ == '__main__':
         torch.quantization.convert(model, inplace=True)
         print("Model Quantized")
 
-
-
-
     print("mem error passed hurray!")
+    if DO_EVALUATE:
+        model.eval()
+        best_acc = 0
+        num_train_batches = 4
+        model = model.to(torch.device('cpu'))
+        model.eval()
+        top1, top5 = evaluate(model, criterion, testloader, torch.device('cpu'))
 
+        print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
 
-    model.eval()
-    best_acc = 0
-    num_train_batches = 4
-    model = model.to(torch.device('cpu'))
-    model.eval()
-    top1, top5 = evaluate(model, criterion, testloader, torch.device('cpu'))
-
-    print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
-
-    #save for mobile
+    # save for mobile
     for i, data in enumerate(testloader, 0):
         inputs, labels = data['image'], data['class']
         traced_script_module = torch.jit.trace(model, inputs)
