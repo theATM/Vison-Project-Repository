@@ -44,6 +44,9 @@ public class MainActivity extends FlutterActivity {
     public void onCreate(Bundle savedState)
     {
         super.onCreate(savedState);
+        // Here the Pretrained Neural Network Selection:
+        // ORIGINAL : resnet_18_acc94_29.pt
+        // BEST : resnet_18_acc94_29.pt
         module = getModel("resnet_18_acc94_29.pt");
     }
 
