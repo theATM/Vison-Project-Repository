@@ -11,9 +11,9 @@ from torch.utils.data import DataLoader
 from Bankset import Bankset
 from torch.optim import lr_scheduler
 from PIL import Image
-
 BEST_MODEL_PATH = './best_model.pth'
-MAX_EPOCH_NUMBER = 105
+MAX_EPOCH_NUMBER = 2 #105
+TRAIN_ARCH = 'cuda' #for cpu type 'cpu', for gpu type 'cuda'
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -92,7 +92,7 @@ def accuracy(output, target, topk=(1,)):
 
         _, pred = output.topk(maxk, 1, True, True)
         pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
+        correct = pred.eq(target.contiguous().view(1, -1).expand_as(pred))
 
         res = []
         for k in topk:
@@ -104,7 +104,7 @@ def load_model(model_file):
     model = MobileNetV2()
     state_dict = torch.load(model_file)
     model.load_state_dict(state_dict)
-    model.to('cpu')
+    model.to(TRAIN_ARCH)
     return model
 
 def print_size_of_model(model):
@@ -203,18 +203,19 @@ if __name__ == '__main__':
                                           transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])])
 
     trainset = Bankset("dataset", transform_train)
-    trainloader = DataLoader(trainset, batch_size=64, shuffle=True, num_workers=8)
+    trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=0)
 
     valset = Bankset("valset", transform_val)
-    valloader = DataLoader(valset, batch_size=8, shuffle=True, num_workers=8)
+    valloader = DataLoader(valset, batch_size=8, shuffle=True, num_workers=0)
 
     testset = Bankset("testset", transform_test)
-    testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=8)
-
+    testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=0)
+    print("Data Loaded")
 
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
 
     model = create_combined_model(original_model)
+    print("Model Created")
     print(model)
 
     criterion = nn.CrossEntropyLoss()
@@ -227,16 +228,16 @@ if __name__ == '__main__':
     #print(model)
 
     best_acc = 0
-    model = model.to(torch.device('cpu'))
+    model = model.to(torch.device(TRAIN_ARCH))
     
     for nepoch in range(MAX_EPOCH_NUMBER):
-        model = model.to(torch.device('cpu'))
+        model = model.to(torch.device(TRAIN_ARCH))
         model.train()
-        train_one_epoch(model, criterion, optimizer, trainloader, torch.device('cpu'))
+        train_one_epoch(model, criterion, optimizer, trainloader, torch.device(TRAIN_ARCH))
         exp_lr_scheduler.step()
 
         model.eval()
-        mtop1, mtop5 = evaluate(model, criterion, valloader, torch.device('cpu'))
+        mtop1, mtop5 = evaluate(model, criterion, valloader, torch.device(TRAIN_ARCH))
         if mtop1.avg > best_acc:
             best_acc = mtop1.avg
             best_model = copy.deepcopy(model.state_dict())
@@ -245,6 +246,6 @@ if __name__ == '__main__':
 
         print('Epoch %d :Evaluation accuracy on all validation images, %2.2f'%(nepoch, mtop1.avg))
     
-    xtop1, xtop5 = evaluate(model, criterion, testloader, torch.device('cpu'))
+    xtop1, xtop5 = evaluate(model, criterion, testloader, torch.device(TRAIN_ARCH))
     print('Evaluation accuracy on all test images, %2.2f'%(xtop1.avg))
     print("Finished Training")

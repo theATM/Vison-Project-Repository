@@ -16,7 +16,7 @@ classes = {
     '100': 3,
     '200': 4,
     '500': 5,
-    #'none': 6,
+    'none': 6,
 }
 
 class Bankset(Dataset):

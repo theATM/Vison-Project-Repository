@@ -15,6 +15,15 @@ import time
 
 BEST_MODEL_PATH = './best_model.pth' #atm I changed from: './quant_mobilenet/best_model.pth'
 
+BACKEND_ENGINE = ''
+if 'qnnpack' in torch.backends.quantized.supported_engines:
+    BACKEND_ENGINE = 'qnnpack'
+elif 'fbgemm' in torch.backends.quantized.supported_engines:
+    BACKEND_ENGINE = 'fbgemm'
+else:
+    BACKEND_ENGINE = 'none'
+    print("No Proper Backend Engine found")
+    exit(-1)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -143,10 +152,10 @@ if __name__ == '__main__':
                                           transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703]),])
 
     testset = Bankset("testset", transform_test)
-    testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=8)
+    testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=0)
 
     trainset = Bankset("dataset", transform_test)
-    trainloader = DataLoader(trainset, batch_size=64, shuffle=True, num_workers=8)
+    trainloader = DataLoader(trainset, batch_size=4, shuffle=True, num_workers=0)
 
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
 
@@ -161,14 +170,14 @@ if __name__ == '__main__':
 
     best_acc = 0
     num_train_batches = 8
-    model = model.to(torch.device('cuda'))
+    model = model.to(torch.device('cpu'))
     model.eval()
 
     # float evaluate
     #top1, top5 = evaluate(model, criterion, testloader, torch.device('cuda'))
     #print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
 
-    model = model.to(torch.device('cuda'))
+    model = model.to(torch.device('cpu'))
     modules_to_fuse = [['1', '2'],
                    ['5.0.conv1', '5.0.bn1'],
                    ['5.0.conv2', '5.0.bn2'],
@@ -193,40 +202,70 @@ if __name__ == '__main__':
     model = torch.quantization.fuse_modules(model, modules_to_fuse)
     print(model)
     print("Trying to pass mem error")
-    # qnnpack - works for ARM # fbgemm - works for x86 (end device)
-    try:
-        torch.backends.quantized.engine = 'qnnpack' #atm - it gives memorry error to me
-    except Exception as e:
+
+    # qnnpack - works for ARM # fbgemm - works for x86
+    if BACKEND_ENGINE =='qnnpack':
+        print("Using qnnpack backend engine")
+        torch.backends.quantized.engine = 'qnnpack' #atm - not working in windows 10
+
+        white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
+        white_list.remove(torch.nn.modules.linear.Linear)
+        qconfig_dict = dict()
+
+        for e in white_list:
+            qconfig_dict[e] = torch.quantization.get_default_qconfig('qnnpack')
+        torch.quantization.propagate_qconfig_(model, qconfig_dict)
+
+        torch.quantization.prepare(model, inplace=True)
+
+        print(model)
+
+        with torch.no_grad():
+            for i, data in enumerate(trainloader, 0):
+                inputs, labels = data['image'], data['class']
+                model(inputs)
+
+        torch.quantization.convert(model, inplace=True)
+        print("Model Quantized")
+
+    elif BACKEND_ENGINE == 'fbgemm':
         # KP - Oh no
-        print(e)
-        exit(-1)
+        #ATM - Work in progress
+        print("Using fbgemm backend engine")
+        torch.backends.quantized.engine = 'fbgemm'
+        allow_list = torch.quantization.
+        #allow_list.remove(torch.nn.modules.linear.Linear)
+        #qconfig_dict = dict()
+        #for e in allow_list:
+        #    qconfig_dict[e] = torch.quantization.get_default_qconfig('fbgemm')
+
+        qconfig_dict = {"ModuleName": torch.quantization.get_default_qconfig()}
+
+        torch.quantization.propagate_qconfig_(model,
+                                              qconfig_dict=torch.quantization.prepare(model=model,
+                                                                                             qconfig_dict=qconfig_dict))
+        torch.quantization.prepare(model, inplace=True)
+
+        with torch.no_grad():
+            for i, data in enumerate(trainloader, 0):
+                inputs, labels = data['image'], data['class']
+                model(inputs)
+
+        torch.quantization.convert(model, inplace=True)
+        print("Model Quantized")
+
+
+
+
     print("mem error passed hurray!")
-    white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
-    white_list.remove(torch.nn.modules.linear.Linear)
-    qconfig_dict = dict()
-    for e in white_list:
-        qconfig_dict[e] = torch.quantization.get_default_qconfig('qnnpack')
 
-    torch.quantization.propagate_qconfig_(model, qconfig_dict=qconfig_dict)
-    print(model.qconfig)
 
-    torch.quantization.prepare(model, inplace=True)
     model.eval()
-    print(model)
-
-    with torch.no_grad():
-        for i, data in enumerate(trainloader, 0):
-            inputs, labels = data['image'], data['class']
-            model(inputs)
-
-    torch.quantization.convert(model, inplace=True)
-    print(model)
-
     best_acc = 0
-    num_train_batches = 8
-    model = model.to(torch.device('cuda'))
+    num_train_batches = 4
+    model = model.to(torch.device('cpu'))
     model.eval()
-    top1, top5 = evaluate(model, criterion, testloader, torch.device('cuda'))
+    top1, top5 = evaluate(model, criterion, testloader, torch.device('cpu'))
 
     print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
 
