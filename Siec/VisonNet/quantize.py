@@ -233,7 +233,7 @@ if __name__ == '__main__':
         #ATM - Work in progress
         print("Using fbgemm backend engine")
         torch.backends.quantized.engine = 'fbgemm'
-        allow_list = torch.quantization.
+        #allow_list = torch.quantization.
         #allow_list.remove(torch.nn.modules.linear.Linear)
         #qconfig_dict = dict()
         #for e in allow_list:
