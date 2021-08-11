@@ -1,0 +1,1 @@
+This is folder used to store symbolic links to data
