@@ -11,9 +11,10 @@ from torch.utils.data import DataLoader
 from Bankset import Bankset
 from torch.optim import lr_scheduler
 from PIL import Image
-BEST_MODEL_PATH = './best_model.pth'
+
 MAX_EPOCH_NUMBER = 2 #105
 TRAIN_ARCH = 'cuda' #for cpu type 'cpu', for gpu type 'cuda'
+
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -202,13 +203,13 @@ if __name__ == '__main__':
                                           transforms.ToTensor(),
                                           transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])])
 
-    trainset = Bankset("dataset", transform_train)
+    trainset = Bankset(Bankset.DATASET_PATH, transform_train)
     trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=0)
 
-    valset = Bankset("valset", transform_val)
+    valset = Bankset(Bankset.VALSET_PATH, transform_val)
     valloader = DataLoader(valset, batch_size=8, shuffle=True, num_workers=0)
 
-    testset = Bankset("testset", transform_test)
+    testset = Bankset(Bankset.TESTSET_PATH, transform_test)
     testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=0)
     print("Data Loaded")
 
@@ -224,7 +225,7 @@ if __name__ == '__main__':
     exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[4, 15, 20, 30, 40, 95], gamma=0.8)
 
     # uncomment to retrain / finetune
-    #model.load_state_dict(torch.load(BEST_MODEL_PATH), strict=False)
+    #model.load_state_dict(torch.load(Bankset.BEST_MODEL_PATH), strict=False)
     #print(model)
 
     best_acc = 0
@@ -242,7 +243,7 @@ if __name__ == '__main__':
             best_acc = mtop1.avg
             best_model = copy.deepcopy(model.state_dict())
             print("Saved ", best_acc)
-            torch.save(best_model, BEST_MODEL_PATH)
+            torch.save(best_model, Bankset.BEST_MODEL_PATH)
 
         print('Epoch %d :Evaluation accuracy on all validation images, %2.2f'%(nepoch, mtop1.avg))
     
