@@ -7,12 +7,12 @@ import torchvision.models.quantization as models
 from torchvision import transforms
 from torch import nn
 from torch.utils.data import DataLoader
-from Bankset import Bankset
+from Network.Bankset import Bankset
 from torch.optim import lr_scheduler
 
 import time
 
-BEST_MODEL_PATH = './best_model.pth'  # atm I changed from: './quant_mobilenet/best_model.pth'
+device = torch.device('cpu')
 
 BACKEND_ENGINE = ''
 if 'qnnpack' in torch.backends.quantized.supported_engines:
@@ -155,11 +155,11 @@ if __name__ == '__main__':
                                          transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701],
                                                               std=[0.24467267, 0.23742135, 0.24701703]), ])
 
-    testset = Bankset("testset", transform_test)
-    testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=8)
+    testset = Bankset(Bankset.TESTSET_PATH, transform_test)
+    testloader = DataLoader(testset, batch_size=2, shuffle=True, num_workers=8)
 
-    trainset = Bankset("dataset", transform_test)
-    trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=8)
+    trainset = Bankset(Bankset.DATASET_PATH, transform_test)
+    trainloader = DataLoader(trainset, batch_size=2, shuffle=True, num_workers=8)
 
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
     criterion = nn.CrossEntropyLoss()
 
-    model.load_state_dict(torch.load(BEST_MODEL_PATH))
+    model.load_state_dict(torch.load(Bankset.BEST_MODEL_PATH,map_location=torch.device('cpu')))
 
     best_acc = 0
     num_train_batches = 8
@@ -237,29 +237,8 @@ if __name__ == '__main__':
 
     elif BACKEND_ENGINE == 'fbgemm':
         # KP - Oh no
-        # ATM - Work in progress
-        print("Using fbgemm backend engine")
-        torch.backends.quantized.engine = 'fbgemm'
-        #allow_list = torch.quantization.
-        # allow_list.remove(torch.nn.modules.linear.Linear)
-        # qconfig_dict = dict()
-        # for e in allow_list:
-        #    qconfig_dict[e] = torch.quantization.get_default_qconfig('fbgemm')
-
-        qconfig_dict = {"ModuleName": torch.quantization.get_default_qconfig()}
-
-        torch.quantization.propagate_qconfig_(model,
-                                              qconfig_dict=torch.quantization.prepare(model=model,
-                                                                                      qconfig_dict=qconfig_dict))
-        torch.quantization.prepare(model, inplace=True)
-
-        with torch.no_grad():
-            for i, data in enumerate(trainloader, 0):
-                inputs, labels = data['image'], data['class']
-                model(inputs)
-
-        torch.quantization.convert(model, inplace=True)
-        print("Model Quantized")
+        print("Using fbgemm backend engine is not supported")
+        exit(-1)
 
     print("mem error passed hurray!")
     if DO_EVALUATE:
