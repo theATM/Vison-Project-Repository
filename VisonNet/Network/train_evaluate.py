@@ -14,7 +14,7 @@ from PIL import Image
 
 MAX_EPOCH_NUMBER = 2 #105
 TRAIN_ARCH = 'cuda' #for cpu type 'cpu', for gpu type 'cuda'
-
+#ale aleksandra taka taka ładna
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
