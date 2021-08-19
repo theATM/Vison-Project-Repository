@@ -257,3 +257,5 @@ if __name__ == '__main__':
         traced_script_module = torch.jit.trace(model, inputs)
         traced_script_module.save("rn18quantized.pt")
         break
+
+    print('Model Saved Successfully')
