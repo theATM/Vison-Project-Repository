@@ -155,23 +155,28 @@ if __name__ == '__main__':
                                          transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701],
                                                               std=[0.24467267, 0.23742135, 0.24701703]), ])
 
+    #Load Data
     testset = Bankset(Bankset.TESTSET_PATH, transform_test)
     testloader = DataLoader(testset, batch_size=2, shuffle=True, num_workers=8)
 
     trainset = Bankset(Bankset.DATASET_PATH, transform_test)
     trainloader = DataLoader(trainset, batch_size=2, shuffle=True, num_workers=8)
 
+    #Load Original Model
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
 
+    print('Model Resnet18:')
     model = create_combined_model(original_model)
     print(model)
     for name, param in model.named_parameters():
         print(name)
+    print('')
 
+    #Load Our Best Model
+    model.load_state_dict(torch.load(Bankset.BEST_MODEL_PATH,map_location=torch.device('cpu')))
     criterion = nn.CrossEntropyLoss()
 
-    model.load_state_dict(torch.load(Bankset.BEST_MODEL_PATH,map_location=torch.device('cpu')))
-
+    #Evaluate Our Model
     best_acc = 0
     num_train_batches = 8
     model = model.to(torch.device('cpu'))
@@ -205,10 +210,10 @@ if __name__ == '__main__':
 
     model = torch.quantization.fuse_modules(model, modules_to_fuse)
     print(model)
-    print("Trying to pass mem error")
 
-    # qnnpack - works for ARM # fbgemm - works for x86
+    print('\nQuantization Started')
     if BACKEND_ENGINE == 'qnnpack':
+        # qnnpack - works for ARM (Linux)
         print("Using qnnpack backend engine")
         torch.backends.quantized.engine = 'qnnpack'  # atm - not working in windows 10
 
@@ -224,23 +229,25 @@ if __name__ == '__main__':
 
         print(model)
 
-        #print("\nStarting Quantizising Imputs")
-        #with torch.no_grad():
-        #    for i, data in enumerate(trainloader, 0):
-        #        if i % 1000 == 0 : print("Progress = " , i)
-        #        inputs, labels = data['image'], data['class']
-        #        model(inputs)
+        print("\nStarting Quantizising Imputs")
+        with torch.no_grad():
+            for i, data in enumerate(trainloader, 0):
+                if i % 1000 == 0 : print("Progress = " , i)
+                inputs, labels = data['image'], data['class']
+                model(inputs)
         print("Imputs Quantized")
 
         torch.quantization.convert(model, inplace=True)
         print("Model Quantized")
-
     elif BACKEND_ENGINE == 'fbgemm':
-        # KP - Oh no
+        # fbgemm - works in x86 machines (Windows)
         print("Using fbgemm backend engine is not supported")
         exit(-1)
+    else:
+        print("Using unknown backend engine - aborting")
+        exit(-2)
 
-    print("mem error passed hurray!")
+
     if DO_EVALUATE:
         model.eval()
         best_acc = 0
