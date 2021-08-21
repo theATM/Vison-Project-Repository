@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torchvision
 import time
@@ -8,20 +10,21 @@ import torchvision.models.quantization as models
 from torch import nn
 from torchvision import transforms
 from torch.utils.data import DataLoader
+from torchvision.models import MobileNetV2
+
 from Bankset import Bankset
 from torch.optim import lr_scheduler
 from PIL import Image
 
 MAX_EPOCH_NUMBER = 2 #105
 TRAIN_ARCH = 'cuda' #for cpu type 'cpu', for gpu type 'cuda'
-#ale aleksandra taka taka ładna
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self, name, fmt=':f'):
         self.name = name
         self.fmt = fmt
-        self.reset() #WOOOOO RESET
+        self.reset()
 
     def reset(self):
         self.val = 0
@@ -49,7 +52,6 @@ def create_combined_model(model_fe):
     model_fe.layer1,
     model_fe.layer2,
     model_fe.layer3,
-    #model_fe.layer4, #without this
     model_fe.avgpool,
   )
 
@@ -169,39 +171,42 @@ class AddGaussianNoise(object):
 
 if __name__ == '__main__':
 
-    transform_train = transforms.Compose([transforms.ToPILImage(),
-                                          transforms.Resize(224),
-                                          transforms.CenterCrop((224,224)),
-                                          #transforms.RandomRotation(180),
-                                          RandomRotationTransform(angles=[-90, 90, 0, 180, -180]),
-                                          transforms.RandomHorizontalFlip(p=0.5),
-                                          transforms.RandomVerticalFlip(p=0.5),
-                                          #transforms.RandomPerspective(distortion_scale=0.25, p=0.5, interpolation=3, fill=0),
-                                          transforms.ColorJitter(brightness=(0.75,1.45), contrast=0.5, saturation=0.5, hue=0.3),
-                                          torchvision.transforms.RandomApply(
-                                            [torchvision.transforms.Grayscale(num_output_channels=3)],
-                                            p=0.35
-                                          ),
-                                          transforms.ToTensor(),
-                                          torchvision.transforms.RandomApply(
-                                            [AddGaussianNoise(0., 1.)],
-                                            p=0.45
-                                          ),
-                                          transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703]),
-                                          transforms.RandomErasing(p=0.5, scale=(0.02, 0.08), ratio=(0.5, 2.3), value='random'),
-                                          ])
+    transform_train = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize(224),
+        transforms.CenterCrop((224,224)),
+        RandomRotationTransform(angles=[-90, 90, 0, 180, -180]),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.ColorJitter(brightness=(0.75,1.45), contrast=0.5, saturation=0.5, hue=0.3),
+        torchvision.transforms.RandomApply(
+            [ torchvision.transforms.Grayscale(num_output_channels=3) ],
+            p=0.35
+        ),
+        transforms.ToTensor(),
+        torchvision.transforms.RandomApply(
+            [AddGaussianNoise(0., 1.)],
+            p=0.45
+        ),
+        transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703]),
+        transforms.RandomErasing(p=0.5, scale=(0.02, 0.08), ratio=(0.5, 2.3), value='random'),
+    ])
 
-    transform_val   = transforms.Compose([transforms.ToPILImage(),
-                                          transforms.Resize(224),
-                                          transforms.CenterCrop((224,224)),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])])
+    transform_val   = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize(224),
+        transforms.CenterCrop((224,224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])
+    ])
         
-    transform_test  = transforms.Compose([transforms.ToPILImage(),
-                                          transforms.Resize(224),
-                                          transforms.CenterCrop((224,224)),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])])
+    transform_test  = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize(224),
+        transforms.CenterCrop((224,224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])
+    ])
 
     trainset = Bankset(Bankset.DATASET_PATH, transform_train)
     trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=0)
