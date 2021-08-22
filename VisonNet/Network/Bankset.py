@@ -11,7 +11,7 @@ def listFilesInDir(dir):
 
 
 
-
+#Defines diferent banknotes denominations - rocognised by network
 classes = {
     '10':  0,
     '20':  1,
@@ -22,9 +22,9 @@ classes = {
     'none': 6,
 }
 
+#Class containing one set of images.
 class Bankset(Dataset):
-    """Polish banknotes dataset."""
-
+    #Usefull Paths
     BEST_MODEL_PATH = '../Models/best_model.pth'
     DATASET_PATH = '../Data/dataset'
     TESTSET_PATH = '../Data/testset'
@@ -32,6 +32,7 @@ class Bankset(Dataset):
 
     def __init__(self, root_dir, transform=None):
         self.images = []
+        #Load Images
         for value in classes:
             tmp = map(lambda x: {'class': value, 'image':x}, listFilesInDir(f"{root_dir}/{value}/"))
             self.images.extend(tmp)
