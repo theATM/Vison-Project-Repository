@@ -5,20 +5,27 @@ import torchvision
 import time
 import copy
 import torch.optim as optim
+
 import torchvision.models.quantization as models
 import random
 
 from torch import nn
+from torchsummary import summary
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from torchvision.models import MobileNetV2
-
 from Bankset import Bankset
 from torch.optim import lr_scheduler
 from PIL import Image
 
+import parameters as par
+
 MAX_EPOCH_NUMBER = 105
-TRAIN_ARCH = 'cuda'  # for cpu type 'cpu', for gpu type 'cuda'
+TRAIN_ARCH = 'cuda:0'  # for cpu type 'cpu', for gpu type 'cuda'
+LOAD_MODEL = False
+
+torch.backends.cudnn.enabled = True;
+torch.backends.cudnn.benchmark = True; #zysk +2% cuda ale wywala sie (?)
 
 
 class AverageMeter(object):
@@ -111,7 +118,6 @@ def load_model(model_file):
     model = MobileNetV2()
     state_dict = torch.load(model_file)
     model.load_state_dict(state_dict)
-    model.to(TRAIN_ARCH)
     return model
 
 
@@ -121,9 +127,7 @@ def print_size_of_model(model):
     os.remove('temp.p')
 
 
-def train_one_epoch(model, criterion, optimizer, data_loader, device):
-
-    model.train()  #TODO Why model.train() runs 2 times ??? atm
+def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice):
 
     # Defines statistical variables
     top1 = AverageMeter('Acc@1', ':6.2f')
@@ -131,14 +135,10 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device):
     avgloss = AverageMeter('Loss', '1.5f')
 
     # Training Loop (Through all data pictures)
-    for i, data in enumerate(data_loader, 0):
-        inputs, labels = data['image'], data['class']
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-
+    for i, data in enumerate(data_loader,0):
+        inputs = torch.autograd.Variable(data['image'].to(trainDevice, non_blocking=True))
+        labels = torch.autograd.Variable(data['class'].to(trainDevice, non_blocking=True))
         start_time = time.time()
-        inputs, labels = inputs.to(device), labels.to(device)
-
         # Calculate Network Function (what Network thinks of this image)
         output = model(inputs)
         # Calculate loss
@@ -155,6 +155,8 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device):
         top1.update(acc1[0], inputs.size(0))
         top5.update(acc5[0], inputs.size(0))
         avgloss.update(loss, inputs.size(0))
+
+
 
     # Print Result for One Epoch of Training
     print('Full train set:  * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f} Loss {avgloss.avg:.3f}'
@@ -175,7 +177,6 @@ class RandomRotationTransform:
         angle = random.choice(self.angles)
         return transforms.functional.rotate(x, angle)
 
-
 class AddGaussianNoise(object):
     def __init__(self, mean=0., std=1.):
         self.std = std
@@ -189,6 +190,7 @@ class AddGaussianNoise(object):
 
 
 if __name__ == '__main__':
+
 
     transform_train = transforms.Compose([
         transforms.ToPILImage(),
@@ -238,12 +240,13 @@ if __name__ == '__main__':
     testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=0)
     print("Data Loaded")
 
+    trainDevice = torch.device(TRAIN_ARCH)
+
     # Prepare Model
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
-
     model = create_combined_model(original_model)
+    model.to(trainDevice)
     print("Model Created")
-    print(model)
 
     # Create Criterion and Optimilizer
     criterion = nn.CrossEntropyLoss()
@@ -251,27 +254,26 @@ if __name__ == '__main__':
 
     exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[4, 15, 20, 30, 40, 95], gamma=0.8)
 
-    # uncomment to retrain / finetune
-    # model.load_state_dict(torch.load(Bankset.BEST_MODEL_PATH), strict=False)
-    # print(model)
+    if LOAD_MODEL == True:
+        # to retrain / finetune
+        model.load_state_dict(torch.load(Bankset.BEST_MODEL_PATH), strict=False)
+        model.to(trainDevice)
+        print("Model Loaded")
 
     best_acc = 0
-    model = model.to(torch.device(TRAIN_ARCH))
 
     # Training Network
+    print('Training Started')
     for nEpoch in range(MAX_EPOCH_NUMBER):
 
-        model = model.to(torch.device(TRAIN_ARCH))
-
-        model.train() #TODO Why model.train() runs 2 times ??? atm  (maybe it is enabling calculate gradient mode? - Not really)
-        #https://discuss.pytorch.org/t/model-eval-vs-with-torch-no-grad/19615/36
-        train_one_epoch(model, criterion, optimizer, trainloader, torch.device(TRAIN_ARCH))
+        model.train()
+        train_one_epoch(model, criterion, optimizer, trainloader, trainDevice)
 
         exp_lr_scheduler.step() # TODO what it does ? atm
 
         # Evaluate each epoch:
-        #TODO why to evaluate every epoch while training? atm
-        model.eval() # Not Sure - same as  torch.no_grad(): (disabling calculations of gradient)
+        #TODO why to evaluate on every epoch while training? atm
+        model.eval()
         mtop1, mtop5 = evaluate(model, criterion, valloader, torch.device(TRAIN_ARCH))
         if mtop1.avg > best_acc:
             best_acc = mtop1.avg
