@@ -7,48 +7,17 @@ import torchvision.models.quantization as models
 from torchvision import transforms
 from torch import nn
 from torch.utils.data import DataLoader
-from Network.Bankset import Bankset
 from torch.optim import lr_scheduler
 
-import time
+import Bankset as bank
+import parameters as par
+import model as mod
 
-device = torch.device('cpu')
 
-BACKEND_ENGINE = ''
-if 'qnnpack' in torch.backends.quantized.supported_engines:
-    BACKEND_ENGINE = 'qnnpack'
-elif 'fbgemm' in torch.backends.quantized.supported_engines:
-    BACKEND_ENGINE = 'fbgemm'
-else:
-    BACKEND_ENGINE = 'none'
-    print("No Proper Backend Engine found")
-    exit(-1)
+
+
 
 DO_EVALUATE = False
-
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-
-    def __init__(self, name, fmt=':f'):
-        self.name = name
-        self.fmt = fmt
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-    def __str__(self):
-        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
-        return fmtstr.format(**self.__dict__)
 
 
 def create_combined_model(model_fe):
@@ -148,6 +117,27 @@ def accuracy(output, target, topk=(1,)):
 
 if __name__ == '__main__':
 
+    # Choose quantization engine
+    BACKEND_ENGINE = ''
+    if 'qnnpack' in torch.backends.quantized.supported_engines:
+        # This Engine Works ONLY on Linux
+        # We will use it
+        BACKEND_ENGINE = 'qnnpack'
+    elif 'fbgemm' in torch.backends.quantized.supported_engines:
+        # This Engine works on Windows (and Linux?)
+        # We won't be using it
+        BACKEND_ENGINE = 'fbgemm'
+        print("FBGEMM Backend Engine is not supported")
+        exit(-2)
+    else:
+        BACKEND_ENGINE = 'none'
+        print("No Proper Backend Engine found")
+        exit(-3)
+
+    # Choose quantization device (cpu/gpu)
+    # If you have gpu On Linux go for it
+    quantDevice = torch.device('cpu')
+
     transform_test = transforms.Compose([transforms.ToPILImage(),
                                          transforms.Resize(224),
                                          transforms.CenterCrop((224, 224)),
@@ -156,37 +146,31 @@ if __name__ == '__main__':
                                                               std=[0.24467267, 0.23742135, 0.24701703]), ])
 
     #Load Data
-    testset = Bankset(Bankset.TESTSET_PATH, transform_test)
-    testloader = DataLoader(testset, batch_size=2, shuffle=True, num_workers=8)
+    testset = bank.Bankset(par.TESTSET_PATH, transform_test)
+    testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=4)
 
-    trainset = Bankset(Bankset.DATASET_PATH, transform_test)
-    trainloader = DataLoader(trainset, batch_size=2, shuffle=True, num_workers=8)
+    trainset = bank.Bankset(par.DATASET_PATH, transform_test)
+    trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=4)
 
     #Load Original Model
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
 
-    print('Model Resnet18:')
-    model = create_combined_model(original_model)
-    print(model)
-    for name, param in model.named_parameters():
-        print(name)
-    print('')
 
     #Load Our Best Model
-    model.load_state_dict(torch.load(Bankset.BEST_MODEL_PATH,map_location=torch.device('cpu')))
+    model = mod.create(load = True, loadPath = par.BEST_MODEL_PATH)
     criterion = nn.CrossEntropyLoss()
+    print('Loaded trained model')
 
     #Evaluate Our Model
     best_acc = 0
     num_train_batches = 8
-    model = model.to(torch.device('cpu'))
+    model = model.to(quantDevice)
     model.eval()
 
     if DO_EVALUATE:
-        top1, top5 = evaluate(model, criterion, testloader, torch.device('cpu'))
+        top1, top5 = evaluate(model, criterion, testloader, quantDevice)
         print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
 
-    model = model.to(torch.device('cpu'))
     modules_to_fuse = [['1', '2'],
                        ['5.0.conv1', '5.0.bn1'],
                        ['5.0.conv2', '5.0.bn2'],
@@ -206,10 +190,14 @@ if __name__ == '__main__':
                        ['7.1.conv2', '7.1.bn2']]
 
     model = add_quant_stubs(model)
-    print(model)
+    #print(model)
 
     model = torch.quantization.fuse_modules(model, modules_to_fuse)
-    print(model)
+    #print(model)
+
+
+
+
 
     print('\nQuantization Started')
     if BACKEND_ENGINE == 'qnnpack':
@@ -227,39 +215,40 @@ if __name__ == '__main__':
 
         torch.quantization.prepare(model, inplace=True)
 
-        print(model)
+        #print(model)
 
-        print("\nStarting Quantizising Imputs")
-        with torch.no_grad():
-            for i, data in enumerate(trainloader, 0):
-                if i % 1000 == 0 : print("Progress = " , i)
-                inputs, labels = data['image'], data['class']
-                model(inputs)
-        print("Imputs Quantized")
+        #print("\nStarting Quantizising Imputs")
+        #with torch.no_grad():
+        #    for i, data in enumerate(trainloader, 0):
+        #        if i % 1000 == 0 : print("Progress = " , i)
+        #        inputs, labels = data['image'], data['class']
+        #        model(inputs)
+        #print("Imputs Quantized")
+        v = model(trainloader.dataset.images[0]['class'])
 
         torch.quantization.convert(model, inplace=True)
         print("Model Quantized")
+
     elif BACKEND_ENGINE == 'fbgemm':
         # fbgemm - works in x86 machines (Windows)
         print("Using fbgemm backend engine is not supported")
-        exit(-1)
+        exit(-2)
     else:
         print("Using unknown backend engine - aborting")
-        exit(-2)
+        exit(-3)
 
-
+    model.eval()
     if DO_EVALUATE:
-        model.eval()
         best_acc = 0
         num_train_batches = 4
-        model = model.to(torch.device('cpu'))
+        model = model.to(quantDevice)
         model.eval()
-        top1, top5 = evaluate(model, criterion, testloader, torch.device('cpu'))
+        top1, top5 = evaluate(model, criterion, testloader, quantDevice)
 
         print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
 
     # save for mobile
-    for i, data in enumerate(testloader, 0):
+    for i, data in enumerate(testloader):
         inputs, labels = data['image'], data['class']
         traced_script_module = torch.jit.trace(model, inputs)
         traced_script_module.save("rn18quantized.pt")

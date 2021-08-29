@@ -1,9 +1,13 @@
-
+import torch
 
 #Training Parameters
 MAX_EPOCH_NUMBER = 105
-TRAIN_ARCH = 'cuda'  # for cpu type 'cpu', for gpu type 'cuda'
-
+TRAIN_ARCH = 'cuda:0'  # for cpu type 'cpu', for gpu type 'cuda'
+LOAD_MODEL = False
+torch.backends.cudnn.enabled = True;
+torch.backends.cudnn.benchmark = True; #zysk +2% cuda  (?) ale wywala sie (?)
+INITIAl_LEARNING_RATE = 0.01
+EVAL_PER_EPOCHS = 20
 
 #Data Parameters
 BEST_MODEL_PATH = '../Models/best_model.pth'
@@ -14,37 +18,3 @@ VALSET_PATH = '../Data/valset'
 #Quantisation Parameters
 
 
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
-
-
-def xyz():
-    model = models.resnet50()
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
-
-    dataset = datasets.FakeData(
-        size=1000,
-        transform=transforms.ToTensor())
-    loader = DataLoader(
-        dataset,
-        num_workers=0,
-        pin_memory=True
-    )
-
-    model.to('cuda')
-
-
-    for data, target in loader:
-        data = data.to('cuda', non_blocking=True)
-        target = target.to('cuda', non_blocking=True)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = criterion(output, target)
-        loss.backward()
-        optimizer.step()
