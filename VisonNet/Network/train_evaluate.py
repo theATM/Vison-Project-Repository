@@ -177,7 +177,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice):
                   .format(loss=loss.item()))
 
     # Print Result for One Epoch of Training
-    print('Full train set:  * Accuracy {top1.avg:.3f} | In Top 3 {top3.avg:.3f} | Loss {avgLoss.avg:.3f} | Used Time {epochTime:.3f}'
+    print('Full train set:  * Accuracy {top1.avg:.3f} | In Top 3 {top3.avg:.3f} | Loss {avgLoss.avg:.3f} | Used Time {epochTime:.2f} s'
           .format(top1=top1, top3=top3, avgLoss=avgLoss,epochTime = time.time() - epochStartTime))
 
 
