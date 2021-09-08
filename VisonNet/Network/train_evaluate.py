@@ -29,6 +29,9 @@ def main():
     trainDevice = torch.device(par.TRAIN_ARCH)
     evalDevice = torch.device(par.TRAIN_ARCH)
 
+    if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
+
+
     # Prepare Model
     model = mod.create(load=par.LOAD_MODEL, loadPath=par.BEST_MODEL_PATH)
     model.to(trainDevice)
@@ -57,20 +60,25 @@ def main():
         if nEpoch % par.EVAL_PER_EPOCHS == 0:
             model.eval()
             mtop1, mtop5 = evaluate(model, criterion, valloader, evalDevice)
+            # Save If Best
             if mtop1.avg > best_acc:
                 best_acc = mtop1.avg
-                best_model = copy.deepcopy(model.state_dict())
-                print("Saved ", best_acc)
-                torch.save(best_model, par.BEST_MODEL_PATH)
+                saveModel(model, best_acc)
             if evalDevice == 'cuda:0' : torch.cuda.empty_cache()
             print('Evaluation on epoch %d accuracy on all validation images, %2.2f' % (nEpoch, mtop1.avg))
-    print('Epoch ' + str(nEpoch) + 'completed')
+
+    print('Epoch ' + str(nEpoch) + ' completed')
 
     #Post Training Evaluation
     model.eval()
     xtop1, xtop5 = evaluate(model, criterion, testloader, evalDevice)
     print('\n' + 'Evaluation accuracy on all test images, %2.2f' % (xtop1.avg))
     print("Finished Training")
+
+    #Save If Best #TODO is this really comparable to valset?
+    if xtop1.avg > best_acc:
+        best_acc = mtop1.avg
+        saveModel(model, best_acc)
 
 
 def loadData(singleBatchTest = False):
@@ -114,13 +122,13 @@ def loadData(singleBatchTest = False):
 
     # Load Data
     trainset = bank.Bankset(par.DATASET_PATH, transform_train)
-    trainloader = DataLoader(trainset, batch_size=8, shuffle=True, pin_memory=True, num_workers=4)
+    trainloader = DataLoader(trainset, batch_size=6, shuffle=True, pin_memory=True, num_workers=4)
 
     valset = bank.Bankset(par.VALSET_PATH, transform_val)
-    valloader = DataLoader(valset, batch_size=2, shuffle=True, pin_memory=True, num_workers=0)
+    valloader = DataLoader(valset, batch_size=4, shuffle=True, num_workers=2)
 
     testset = bank.Bankset(par.TESTSET_PATH, transform_test)
-    testloader = DataLoader(testset, batch_size=2, shuffle=True, pin_memory=True, num_workers=0)
+    testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=2)
     print("Data Loaded")
 
     if singleBatchTest == True:
@@ -136,15 +144,15 @@ def loadData(singleBatchTest = False):
 def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice):
 
     # Defines statistical variables
-    top1 = bank.AverageMeter('Acc@1', ':6.2f')
-    top5 = bank.AverageMeter('Acc@5', ':6.2f')
-    avgloss = bank.AverageMeter('Loss', '1.5f')
+    top1 = bank.AverageMeter('Accuracy', ':6.2f')
+    top3 = bank.AverageMeter('In Top 3', ':6.2f')
+    avgLoss = bank.AverageMeter('Loss', '1.5f')
 
     # Training Loop (Through all data pictures)
     for i, data in enumerate(data_loader):
         inputs = torch.autograd.Variable(data['image'].to(trainDevice, non_blocking=True))
         labels = torch.autograd.Variable(data['class'].to(trainDevice, non_blocking=True))
-        start_time = time.time()
+        #start_time = time.time()
         # Calculate Network Function (what Network thinks of this image)
         output = model(inputs)
         # Calculate loss
@@ -153,22 +161,29 @@ def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice):
         optimizer.zero_grad()
         # Backpropagate loss
         loss.backward()
+        #Clipping the gradient #TODO test
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 1)
         # Update the weighs
         optimizer.step()
         # Calculate Accuracy
-        acc1, acc5 = accuracy(output, labels, topk=(1, 5))
+        acc1, acc3 = accuracy(output, labels, topk=(1, 3))
         # Update Statistics
         top1.update(acc1[0], inputs.size(0))
-        top5.update(acc5[0], inputs.size(0))
-        avgloss.update(loss, inputs.size(0))
+        top3.update(acc3[0], inputs.size(0))
+        avgLoss.update(loss, inputs.size(0))
         if i % 1000 == 0:
-            print('Image ' + str(i) + ' Acc@1 {acc1:.3f} Acc@5 {acc5:.3f} Loss {loss:.3f}'
-                  .format(acc1=acc1.item(), acc5=acc5.item(), loss=loss.item()))
+            print('Image ' + str(i) + 'Current Loss {loss:.3f}'
+                  .format(loss=loss.item()))
 
     # Print Result for One Epoch of Training
-    print('Full train set:  * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f} Loss {avgloss.avg:.3f}'
-          .format(top1=top1, top5=top5, avgloss=avgloss))
+    print('Full train set:  * Accuracy {top1.avg:.3f} | In Top 3 {top3.avg:.3f} | Loss {avgLoss.avg:.3f}'
+          .format(top1=top1, top3=top3, avgloss=avgLoss))
 
+
+def saveModel(model, best_acc):
+    best_model = copy.deepcopy(model.state_dict())
+    torch.save(best_model, par.BEST_MODEL_PATH)
+    print("Saved ", best_acc)
 
 
 def evaluate(model, criterion, data_loader, device):

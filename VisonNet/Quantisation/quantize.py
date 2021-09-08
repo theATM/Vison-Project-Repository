@@ -147,10 +147,10 @@ if __name__ == '__main__':
 
     #Load Data
     testset = bank.Bankset(par.TESTSET_PATH, transform_test)
-    testloader = DataLoader(testset, batch_size=8, shuffle=True, num_workers=4)
+    testloader = DataLoader(testset, batch_size=6, shuffle=True, num_workers=4)
 
     trainset = bank.Bankset(par.DATASET_PATH, transform_test)
-    trainloader = DataLoader(trainset, batch_size=8, shuffle=True, num_workers=4)
+    trainloader = DataLoader(trainset, batch_size=6, shuffle=True, num_workers=4)
 
     #Load Original Model
     original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
