@@ -1,0 +1,6 @@
+This is code which was left on PG computer it may or may not work! (ATM)
+I saparated it from the "normal" files on purpouse
+They are very interesting.
+Sadly due to lack of contecst so far this is all I know
+There is no way in saing which version is final
+I did some ajusting to enable training in our file configuration

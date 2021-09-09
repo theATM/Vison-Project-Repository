@@ -41,7 +41,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=par.INITIAl_LEARNING_RATE)
 
     # Decays the learning rate of each parameter group by gamma once the number of epoch reaches one of the milestones.
-    exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[4, 15, 20, 30, 40, 95], gamma=0.8)
+    exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[4, 15, 20, 30, 40, 95], gamma=0.1) #gamma=0.8 atm
 
     best_acc = 0
 
