@@ -8,6 +8,8 @@ import torch.optim as optim
 import random
 
 from torch import nn
+from torch.nn import utils
+from torch.nn.utils import clip_grad_norm_
 from torchsummary import summary
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -154,18 +156,28 @@ def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice):
     for i, data in enumerate(data_loader):
         inputs = torch.autograd.Variable(data['image'].to(trainDevice, non_blocking=True))
         labels = torch.autograd.Variable(data['class'].to(trainDevice, non_blocking=True))
-        # Calculate Network Function (what Network thinks of this image)
-        output = model(inputs)
-        # Calculate loss
-        loss = criterion(output, labels)
-        # Resets Gradient to Zeros (clearing it before using in calculations)
-        optimizer.zero_grad()
-        # Backpropagate loss
-        loss.backward()
-        #Clipping the gradient #TODO test
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 1)
-        # Update the weighs
-        optimizer.step()
+
+        # passes and weights update
+        with torch.set_grad_enabled(True):
+
+            # Calculate Network Function (what Network thinks of this image)
+            output = model(inputs)
+            # Calculate loss
+            loss = criterion(output, labels)
+            # Backpropagate loss
+            loss.backward()
+            # Normalize loss to account for batch accumulation
+            loss = loss / 4
+
+            # Gradient batch Accumulation
+            if (i + 1) % 4 == 0:
+                #Clipping the gradient
+                clip_grad_norm_(model.parameters(), max_norm = 1)
+                # Update the weighs
+                optimizer.step()
+                # Resets Gradient to Zeros (clearing it before using in calculations)
+                optimizer.zero_grad()
+
         # Calculate Accuracy
         acc1, acc3 = accuracy(output, labels, topk=(1, 3))
         # Update Statistics
