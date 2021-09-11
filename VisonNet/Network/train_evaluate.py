@@ -37,13 +37,12 @@ def main():
     # Prepare Model
     model = mod.create(load=par.LOAD_MODEL, loadPath=par.BEST_MODEL_PATH)
     model.to(trainDevice)
-
     # Create Criterion and Optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=par.INITIAl_LEARNING_RATE)
 
     # Decays the learning rate of each parameter group by gamma once the number of epoch reaches one of the milestones.
-    exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[4, 15, 20, 30, 40, 95], gamma=0.1) #gamma=0.8 atm
+    exp_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[4, 15, 20, 30, 40, 95], gamma=par.SCHEDULER_GAMMA)
 
     best_acc = 0
 
@@ -54,7 +53,7 @@ def main():
         print('\n' + 'Epoch ' + str(nEpoch) + ':')
         # Training Model
         model.train()
-        train_one_epoch(model, criterion, optimizer, trainloader, trainDevice)
+        train_one_epoch(model, criterion, optimizer, trainloader, trainDevice, nEpoch)
 
         # Stepping scheduler
         exp_lr_scheduler.step()
@@ -66,7 +65,7 @@ def main():
             # Save If Best
             if mtop1.avg > best_acc:
                 best_acc = mtop1.avg
-                saveModel(model, best_acc)
+                mod.saveModel(model,nEpoch, best_acc, par.MODEL_DIR, par.MODEL_NAME)
             if evalDevice == 'cuda:0' : torch.cuda.empty_cache()
             print('Evaluation on epoch %d accuracy on all validation images, %2.2f' % (nEpoch, mtop1.avg))
 
@@ -74,14 +73,14 @@ def main():
 
     #Post Training Evaluation
     model.eval()
-    xtop1, xtop5 = evaluate(model, criterion, testloader, evalDevice)
+    xtop1, _ = evaluate(model, criterion, testloader, evalDevice)
     print('\n' + 'Evaluation accuracy on all test images, %2.2f' % (xtop1.avg))
     print("Finished Training")
 
     #Save If Best #TODO is this really comparable to valset?
     if xtop1.avg > best_acc:
         best_acc = mtop1.avg
-        saveModel(model, best_acc)
+        mod.saveModel(model,par.MAX_EPOCH_NUMBER, best_acc, par.MODEL_DIR, par.MODEL_NAME)
 
 
 def loadData(singleBatchTest = False):
@@ -139,12 +138,12 @@ def loadData(singleBatchTest = False):
         singleBatch = next(iter(trainloader))
         singleBatchImages, singleBatchLabels, singleBatchNames = singleBatch['image'], singleBatch['class'], singleBatch['name']
         singleBatchDataSet = bank.SingleBatchTestSet(singleBatchImages, singleBatchLabels, singleBatchNames)
-        trainloader = DataLoader(singleBatchDataSet, batch_size=8, shuffle=True, pin_memory=True, num_workers=4)
+        trainloader = DataLoader(singleBatchDataSet, batch_size=6, shuffle=True, pin_memory=True, num_workers=4)
 
     return trainloader, valloader, testloader
 
 
-def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice):
+def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice, nEpoch):
 
     # Defines statistical variables
     top1 = bank.AverageMeter('Accuracy', ':6.2f')
@@ -167,15 +166,15 @@ def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice):
             # Backpropagate loss
             loss.backward()
             # Normalize loss to account for batch accumulation
-            loss = loss / 4
+            loss = loss / par.GRAD_PER_BATCH
 
-            # Gradient batch Accumulation
-            if (i + 1) % 4 == 0:
+            # Calculate, minding gradient batch accumulation
+            if (i + 1) % par.GRAD_PER_BATCH == 0:
                 #Clipping the gradient
                 clip_grad_norm_(model.parameters(), max_norm = 1)
                 # Update the weighs
                 optimizer.step()
-                # Resets Gradient to Zeros (clearing it before using in calculations)
+                # Resets Gradient to Zeros (clearing it before using it next time in calculations)
                 optimizer.zero_grad()
 
         # Calculate Accuracy
@@ -189,14 +188,9 @@ def train_one_epoch(model, criterion, optimizer, data_loader, trainDevice):
                   .format(loss=loss.item()))
 
     # Print Result for One Epoch of Training
-    print('Full train set:  * Accuracy {top1.avg:.3f} | In Top 3 {top3.avg:.3f} | Loss {avgLoss.avg:.3f} | Used Time {epochTime:.2f} s'
+    print('Epoch ' + nEpoch +':  * Accuracy {top1.avg:.3f} | In Top 3 {top3.avg:.3f} | Loss {avgLoss.avg:.3f} | Used Time {epochTime:.2f} s'
           .format(top1=top1, top3=top3, avgLoss=avgLoss,epochTime = time.time() - epochStartTime))
 
-
-def saveModel(model, best_acc):
-    best_model = copy.deepcopy(model.state_dict())
-    torch.save(best_model, par.BEST_MODEL_PATH)
-    print("Saved ", best_acc)
 
 
 def evaluate(model, criterion, data_loader, device):

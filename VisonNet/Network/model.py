@@ -1,8 +1,12 @@
 import os
 import torch
+import copy
 import torchvision.models.quantization as originalModels
 from torchvision.models import MobileNetV2
 from torch import nn
+from datetime import datetime
+import parameters as par
+
 
 
 def create(load = False, loadPath = ''):
@@ -51,6 +55,15 @@ def load_model(model_file):
     state_dict = torch.load(model_file)
     model.load_state_dict(state_dict)
     return model
+
+
+def saveModel(model,epoch ,best_acc, model_dir, model_name):
+    best_model = copy.deepcopy(model.state_dict())
+    now = datetime.now()
+    now_str = now.strftime("%d-%m-%Y_%H-%M")
+    name_str = model_dir + str( model_name) + '_' + now_str + '_' + 'Epoch_' + str('%04d' % epoch) + '_Acc_' + str('%.2f' % best_acc) + par.MODEL_FILE_TYPE
+    torch.save(best_model, name_str)
+    print("Saved ", best_acc)
 
 
 def print_size_of_model(model):
