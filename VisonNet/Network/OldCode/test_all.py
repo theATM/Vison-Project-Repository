@@ -4,7 +4,7 @@ This file to best of mine knowledge is proto quantize.py - ATM
 Will Work only on Linux with CPU
 
 '''
-from MobileNetv2_impl import MobileNetV2, AverageMeter
+from mobilenet_v2 import MobileNetV2, AverageMeter
 #from PIL import Image
 import torch
 from torchvision import transforms
@@ -13,7 +13,7 @@ from torch import nn
 
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import BanksetOld as oldBank
+import bankset_old as oldBank
 import copy
 import torchvision.models.quantization as models
 

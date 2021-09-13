@@ -9,11 +9,11 @@ torch.backends.cudnn.benchmark = True; #zysk +2% cuda  (?)
 INITIAl_LEARNING_RATE = 0.01
 SCHEDULER_GAMMA = 0.8
 EVAL_PER_EPOCHS = 20
-GRAD_PER_BATCH = 4
+GRAD_PER_BATCH = 8
 
 #Data Parameters
 MODEL_DIR = '../Models/'
-MODEL_NAME = 'Resnet18'
+MODEL_NAME = 'OrgResnet18'
 MODEL_FILE_TYPE = '.pth'
 BEST_MODEL_PATH = '../Models/best_model.pth'
 DATASET_PATH = '../Data/dataset'

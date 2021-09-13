@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 import torchvision
 import torchvision.transforms as transforms
-import BanksetOld as oldBank
+import bankset_old as oldBank
 import copy
 
 FINAL_MODEL_PATH = oldBank.BEST_MODEL_DIR + 'resnet_final_model.pth'

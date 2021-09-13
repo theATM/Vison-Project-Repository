@@ -3,9 +3,9 @@ from PIL import Image
 import torchvision
 from torchvision import transforms
 from torch import nn
-import BanksetOld as oldBank
+import bankset_old as oldBank
 from torch.utils.data import DataLoader
-from MobileNetv2_impl import MobileNetV2, AverageMeter
+from mobilenet_v2 import MobileNetV2, AverageMeter
 
 
 WEIGHTS_PATH = oldBank.BEST_MODEL_DIR + 'best_test.pth'
