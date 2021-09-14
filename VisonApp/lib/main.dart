@@ -45,7 +45,8 @@ class TakePictureScreen extends StatefulWidget {
   TakePictureScreenState createState() => TakePictureScreenState();
 }
 
-class TakePictureScreenState extends State<TakePictureScreen> {
+class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindingObserver {
+  AppLifecycleState _lastLifecycleState = null;
   CameraController _controller;
   Soundpool soundpool;
   String error;
@@ -200,6 +201,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     this.soundmap["500"] = await soundpool.load(asset);
     asset = await rootBundle.load("sounds/None.wav");
     this.soundmap["None"] = await soundpool.load(asset);
+    asset = await rootBundle.load("sounds/End.wav");
+    this.soundmap["End"] = await soundpool.load(asset);
     // play starting sound
     await this.soundpool.play(this.soundmap['None']);
   }
@@ -217,6 +220,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // To display the current output from the Camera,
     // create a CameraController.
     _controller = CameraController(
@@ -287,52 +291,46 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   @override
   void dispose() {
     // Dispose of the controller when the widget is disposed.
+    WidgetsBinding.instance.removeObserver(this);
     _controller.stopImageStream();
     _controller.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: Text(
-        this.currentDisplayMessage,
-        textScaleFactor: 1.4,
-      )),
-      // Wait until the controller is initialized before displaying the
-      // camera preview. Use a FutureBuilder to display a loading spinner
-      // until the controller has finished initializing.
-      body: FutureBuilder<void>(
-        future: _initializeControllerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            // If the Future is complete, display the preview.
-            return CameraPreview(_controller);
-          } else {
-            // Otherwise, display a loading indicator.
-            return Center(child: CircularProgressIndicator());
-          }
-        },
-      ),
-    );
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    setState(() {
+      _lastLifecycleState = state;
+    });
   }
-}
-
-// A widget that displays the picture taken by the user.
-class DisplayPictureScreen extends StatelessWidget {
-  final String imagePath;
-
-  const DisplayPictureScreen({Key key, @required this.imagePath})
-      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+
+    if ( _lastLifecycleState != null) {
+      this.dispose();
+      exit(0);
+    }
+
     return Scaffold(
-      appBar: AppBar(title: Text('Display the Picture')),
-      // The image is stored as a file on the device. Use the `Image.file`
-      // constructor with the given path to display the image.
-      body: Image.file(File(imagePath)),
+      // Wait until the controller is initialized before displaying the
+      // camera preview. Use a FutureBuilder to display a loading spinner
+      // until the controller has finished initializing.
+        body: Container(
+            color: Colors.black54,
+            child: GestureDetector(
+              onDoubleTap: (){
+                this.soundpool.play((this.soundmap['End']));
+                Timer(Duration(seconds: 2), () {
+                  this.dispose();
+                  exit(0);
+                }
+                );
+              },
+            )
+        )
     );
   }
 }
+
+
