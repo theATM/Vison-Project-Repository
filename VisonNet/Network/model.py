@@ -22,7 +22,10 @@ class UsedModel:
         self.model = None
         self.criterion = None
         self.optimizer = None
-        self.model_path = self.__generateInitPath(par.MODEL_DIR, chooseModel)
+        if load is False:
+            self.model_path =  self.__generateInitPath(par.MODEL_DIR, chooseModel)
+        else:
+            self.model_path = loadPath
         #Private Variables
         self.__model_name = chooseModel
         self.__model_file_type = par.MODEL_FILE_TYPE

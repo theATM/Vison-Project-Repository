@@ -1,15 +1,20 @@
 import torch
-from torchvision import transforms
+import torchvision
+
 from torch.utils.data import DataLoader
+from torchvision import transforms
 
 import bankset as bank
 import parameters as par
 import model as mod
 import training as train
+from skimage import io
 
-MODEL_PATH = ''
-MODE = 'Evaluate'
+MODEL_PATH = '../Models/OrgResnet18_11-09-2021_17-24_Epoch_0060_Acc_17.62.pth' #'../Models/resnetTa94pretrained.pth'
+MODE = 'Test' #'Evaluate'
 
+Image_PATH = '../../../Data/testset/500/63.jpg'
+Image_Label = 500
 
 def __evaluateMain():
     #Load Data
@@ -47,13 +52,65 @@ def evaluate(used_model, data_loader, device):
 
 def __testMain():
 
-    _, _, testloader = bank.loadData(arg_load_train=False, arg_load_val=False, arg_load_test=True)
     test_device = torch.device(par.TRAIN_ARCH)
-    #Empty GPU Cache before Testing starts
+    used_model = mod.UsedModel('Original_Resnet18', loadPath=MODEL_PATH, load=True)
+    #used_model.model.to(test_device)
+    used_model.model.eval()
+
+    transform_test = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize(224),
+        transforms.CenterCrop((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])
+        ])
+
+    image = io.imread(Image_PATH)
+    image = transform_test(image)
+    image = image[None,:,:,:]
+    #image = image.to(test_device)
+
+    with torch.no_grad():
+        output = used_model.model(image)
+        print(output)
+        pred_val, pred = output.topk(1, 1, True, True)
+        pred_val = pred_val.numpy()
+        suggest = bank.classes(pred.item())
+        suggest_val = pred_val[pred.item()]
+        correct = Image_Label
+        hit = pred.eq(bank.classes.get(str(Image_Label)))
+
+        print("Image " + str(Image_PATH) + "recognised as " + str(bank.classes(suggest)) + "zl, with " +suggest_val + "certainty")
+
+
+        if hit is True:
+            print("This is Correct")
+        else:
+            print("This is Not Correct")
+
+        print("This image should be " + "recognised as " + str(bank.classes(correct)) + "zl")
+
+        print("Whole output = " + pred_val)
+
+
+
+def multi():
+    _,_,testloader = bank.loadData(arg_load_train=False, arg_load_val=False, arg_load_test=True)
+    test_device = torch.device(par.TRAIN_ARCH)
+    # Empty GPU Cache before Testing starts
     if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
     used_model = mod.UsedModel('Original_Resnet18', loadPath=MODEL_PATH, load=True)
+    used_model.model.eval()
+    singleBatch = next(iter(testloader))
+    input, label, name = singleBatch['image'], singleBatch['class'], singleBatch['name']
 
-
+    with torch.no_grad():
+        output = used_model.model(input)
+        _, pred = output.topk(1, 1, True, True)
+        pred = pred.t()
+        correct = pred.eq(label.contiguous().view(1, -1).expand_as(pred))
+        correct_k = correct[:1].reshape(-1).float().sum(0, keepdim=True)
+        print(str(correct_k))
 
 
 def accuracy(output, target, topk=(1,)):

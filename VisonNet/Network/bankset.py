@@ -122,18 +122,21 @@ def loadData(arg_load_train = True, arg_load_val = True,arg_load_test = True,
     trainset = None
     valset = None
     testset = None
+    trainloader = None
+    valloader = None
+    testloader = None
     print("Loaded",end=' ')
     if arg_load_train is True:
         trainset = Bankset(par.DATASET_PATH, transform_train)
-        trainloader = DataLoader(trainset, batch_size=8, shuffle=True, pin_memory=True, num_workers=4)
+        trainloader = DataLoader(trainset, batch_size=1, shuffle=True, pin_memory=True, num_workers=0)
         print("TrainSet",end=' ')
     if arg_load_val is True:
         valset = Bankset(par.VALSET_PATH, transform_val)
-        valloader = DataLoader(valset, batch_size=4, shuffle=True, num_workers=2)
+        valloader = DataLoader(valset, batch_size=1, shuffle=True, num_workers=0)
         print("ValSet", end=' ')
     if arg_load_test is True:
         testset = Bankset(par.TESTSET_PATH, transform_test)
-        testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=2)
+        testloader = DataLoader(testset, batch_size=1, shuffle=True, num_workers=0)
         print("TestSet", end=' ')
     if (arg_load_train or  arg_load_val or arg_load_test) is False:
         print("No Data")
@@ -149,7 +152,7 @@ def loadData(arg_load_train = True, arg_load_val = True,arg_load_test = True,
         trainloader = DataLoader(singleBatchDataSet, batch_size=6, shuffle=True, pin_memory=True, num_workers=4)
         print("Single Batch Test Chosen")
 
-    return trainloader, valloader, testloader
+    return  trainloader, valloader, testloader
 
 
 
