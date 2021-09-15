@@ -25,8 +25,7 @@ import android.os.Bundle;
 public class MainActivity extends FlutterActivity {
     private static final boolean isDebug = false; 
     private static final String CHANNEL = "samples.flutter.dev/battery";
-    private static FlutterEngine _flutterEngine;
-    private static final LinkedBlockingQueue<Runnable> neuralNetFrameQueue = new LinkedBlockingQueue<Runnable>(1);
+    private static FlutterEngine _flutterEngine;    private static final LinkedBlockingQueue<Runnable> neuralNetFrameQueue = new LinkedBlockingQueue<Runnable>(1);
     Module module;
     private static final ThreadPoolExecutor neuralNetThreadPool = new ThreadPoolExecutor(
             1,       // Initial pool size
@@ -45,9 +44,10 @@ public class MainActivity extends FlutterActivity {
     {
         super.onCreate(savedState);
         // Here the Pretrained Neural Network Selection:
+        // Avaiable models at VisonApp\android\app\src\main\assets
         // ORIGINAL : resnet_18_acc94_29.pt
         // BEST : resnet_18_acc94_29.pt
-        module = getModel("resnet_18_acc94_29.pt");
+        module = getModel("rn18quantizedATMTEST2.pt");
     }
 
     private MethodChannel flutterChannel;
