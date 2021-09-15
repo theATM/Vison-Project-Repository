@@ -47,6 +47,7 @@ class TakePictureScreen extends StatefulWidget {
 
 class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindingObserver {
   AppLifecycleState _lastLifecycleState = null;
+  bool isTapped = false;
   CameraController _controller;
   Soundpool soundpool;
   String error;
@@ -320,12 +321,15 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
             color: Colors.black54,
             child: GestureDetector(
               onDoubleTap: (){
-                this.soundpool.play((this.soundmap['End']));
-                Timer(Duration(seconds: 2), () {
-                  this.dispose();
-                  exit(0);
+                if (!isTapped) {
+                  this.isTapped = true;
+                  this.soundpool.play((this.soundmap['End']));
+                  Timer(Duration(seconds: 2), () {
+                    this.dispose();
+                    exit(0);
+                  }
+                  );
                 }
-                );
               },
             )
         )
