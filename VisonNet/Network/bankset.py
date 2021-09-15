@@ -36,6 +36,16 @@ classes = {
     'none': 6,
 }
 
+anticlasses = {
+      0: 10,
+      1 : 20,
+      2: 50,
+     3: 100,
+     4: 200,
+     5: 500,
+     6: 'none',
+}
+
 
 #Class containing one set of images.
 class Bankset(Dataset):

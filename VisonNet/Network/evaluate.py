@@ -75,12 +75,14 @@ def __testMain():
         print(output)
         pred_val, pred = output.topk(1, 1, True, True)
         pred_val = pred_val.numpy()
-        suggest = bank.classes(pred.item())
-        suggest_val = pred_val[pred.item()]
+        print("Choosen nr "+ str(pred) + " With sertanty = " + str(pred_val))
+        suggest = bank.anticlasses.get(pred.item())
+        #suggest_val = output[pred.item()]
+        suggest_val =''
         correct = Image_Label
         hit = pred.eq(bank.classes.get(str(Image_Label)))
 
-        print("Image " + str(Image_PATH) + "recognised as " + str(bank.classes(suggest)) + "zl, with " +suggest_val + "certainty")
+        print("Image " + str(Image_PATH) + "recognised as " + str(bank.anticlasses.get(suggest)) + " zl, with " +suggest_val + "certainty")
 
 
         if hit is True:
@@ -88,9 +90,9 @@ def __testMain():
         else:
             print("This is Not Correct")
 
-        print("This image should be " + "recognised as " + str(bank.classes(correct)) + "zl")
+        print("This image should be " + "recognised as " + str(bank.anticlasses.get(correct)) + " zl")
 
-        print("Whole output = " + pred_val)
+        print("Whole output = " + str(pred_val))
 
 
 
