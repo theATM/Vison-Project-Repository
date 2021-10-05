@@ -73,16 +73,18 @@ def __testMain():
     with torch.no_grad():
         output = used_model.model(image)
         print(output)
+        print("classes ",end="")
+        print(bank.classes)
         pred_val, pred = output.topk(1, 1, True, True)
         pred_val = pred_val.numpy()
         print("Choosen nr "+ str(pred) + " With sertanty = " + str(pred_val))
         suggest = bank.anticlasses.get(pred.item())
-        #suggest_val = output[pred.item()]
-        suggest_val =''
+        suggest_val = pred_val[0][0]
         correct = Image_Label
+        correct_val = output.numpy()[0][0][bank.anticlasses.get(correct)][0]
         hit = pred.eq(bank.classes.get(str(Image_Label)))
 
-        print("Image " + str(Image_PATH) + "recognised as " + str(bank.anticlasses.get(suggest)) + " zl, with " +suggest_val + "certainty")
+        print("Image " + str(Image_PATH) + " recognised as " + str(suggest) + " zl, with " + str(suggest_val) + " certainty")
 
 
         if hit is True:
@@ -90,9 +92,7 @@ def __testMain():
         else:
             print("This is Not Correct")
 
-        print("This image should be " + "recognised as " + str(bank.anticlasses.get(correct)) + " zl")
-
-        print("Whole output = " + str(pred_val))
+        print("This image should be " + "recognised as " + str(correct) + " zl, " + "( " + str(correct_val) + " )")
 
 
 
