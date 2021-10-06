@@ -17,7 +17,7 @@ from PIL import Image
 import bankset as bank
 import parameters as par
 import model as mod
-
+import evaluate as eva
 
 def main():
 
@@ -55,7 +55,7 @@ def main():
         # Evaluate in some epochs:
         if (nEpoch+1) % par.EVAL_PER_EPOCHS == 0 :
             used_model.model.eval()
-            mtop1, mtop5 = eval.evaluate(used_model, valloader, evalDevice)
+            mtop1, mtop5 = eva.evaluate(used_model, valloader, evalDevice)
             # Save If Best
             if mtop1.avg > best_acc:
                 best_acc = mtop1.avg
@@ -67,7 +67,7 @@ def main():
 
     #Post Training Evaluation
     used_model.model.eval()
-    xtop1, _ = eval.evaluate(used_model, testloader, evalDevice)
+    xtop1, _ = eva.evaluate(used_model, testloader, evalDevice)
     print('\n' + 'Evaluation accuracy on all test images, %2.2f' % (xtop1.avg))
     print("Finished Training")
 
@@ -112,7 +112,7 @@ def train_one_epoch(used_model, data_loader, trainDevice, nEpoch):
                 used_model.optimizer.zero_grad()
 
             # Calculate Accuracy
-            acc1, acc3 = eval.accuracy(output, labels, topk=(1, 3))
+            acc1, acc3 = eva.accuracy(output, labels, topk=(1, 3))
             # Update Statistics
             top1.update(acc1[0], inputs.size(0))
             top3.update(acc3[0], inputs.size(0))
