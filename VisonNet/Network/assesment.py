@@ -1,13 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image,  ImageTk
-
-
-
-
-
-
-
 import torch
 import torchvision
 import tkinter as tk
