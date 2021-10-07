@@ -103,10 +103,10 @@ class UsedModel:
 
     def __loadModel(self, loadPath):
         if loadPath == '':
-            print('Loading Path is Empty')
+            print('Loading Model Path is Empty')
             exit(MODEL_ERROR_ID)
         if os.path.isfile(loadPath) is False:
-            print('Loading File does not Exist')
+            print('Loading Model File does not Exist')
             exit(MODEL_ERROR_ID)
         self.model.load_state_dict(torch.load(loadPath), strict=False)
         print("Model Loaded")

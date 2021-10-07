@@ -38,12 +38,12 @@ classes = {
 
 anticlasses = {
       0: 10,
-      1 : 20,
+      1: 20,
       2: 50,
-     3: 100,
-     4: 200,
-     5: 500,
-     6: 'none',
+      3: 100,
+      4: 200,
+      5: 500,
+      6: 'none',
 }
 
 
@@ -138,15 +138,15 @@ def loadData(arg_load_train = True, arg_load_val = True,arg_load_test = True,
     print("Loaded",end=' ')
     if arg_load_train is True:
         trainset = Bankset(par.DATASET_PATH, transform_train)
-        trainloader = DataLoader(trainset, batch_size=1, shuffle=True, pin_memory=True, num_workers=0)
+        trainloader = DataLoader(trainset, batch_size=16, shuffle=True, pin_memory=True, num_workers=4)
         print("TrainSet",end=' ')
     if arg_load_val is True:
         valset = Bankset(par.VALSET_PATH, transform_val)
-        valloader = DataLoader(valset, batch_size=1, shuffle=True, num_workers=0)
+        valloader = DataLoader(valset, batch_size=4, shuffle=True, num_workers=2)
         print("ValSet", end=' ')
     if arg_load_test is True:
         testset = Bankset(par.TESTSET_PATH, transform_test)
-        testloader = DataLoader(testset, batch_size=1, shuffle=True, num_workers=0)
+        testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=2)
         print("TestSet", end=' ')
     if (arg_load_train or  arg_load_val or arg_load_test) is False:
         print("No Data")
