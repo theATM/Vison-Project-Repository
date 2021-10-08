@@ -145,10 +145,10 @@ class UsedModel:
 
     def getSavedModelPath(self):
         """ It constructs full model save path, by adding current training epoch and model accuracy to it. Atm"""
-        return self.model_path \
-               + 'Epoch_' + str('%04d' % self.__model_save_epoch+1) \
+        return str(self.model_path) \
+               + 'Epoch_' + str('%04d' % (self.__model_save_epoch+1)) \
                + '_Acc_' + str('%.2f' % self.__model_save_acc) \
-               + self.__model_file_type
+               + str(self.__model_file_type)
 
 
     def printSizeofModel(self):

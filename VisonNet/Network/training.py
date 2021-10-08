@@ -34,7 +34,6 @@ def main():
     # Prepare Model
     used_model = mod.UsedModel('Original_Resnet18', pretrained=True)
     used_model.model.to(trainDevice)
-
     # Decays the learning rate of each parameter group by gamma once the number of epoch reaches one of the milestones.
     exp_lr_scheduler = lr_scheduler.MultiStepLR(used_model.optimizer, milestones=[4, 15, 20, 30, 40, 95], gamma=par.SCHEDULER_GAMMA)
 
