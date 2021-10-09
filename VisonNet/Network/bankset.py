@@ -165,7 +165,6 @@ def loadData(arg_load_train = True, arg_load_val = True,arg_load_test = True,
     return  trainloader, valloader, testloader
 
 
-
 class RandomRotationTransform:
     """Rotate by one of the given angles."""
 
