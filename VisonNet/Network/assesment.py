@@ -46,7 +46,7 @@ def main():
 
     elif user_choice == 0:
         print("Chosen Multi Image Assessment")
-        asses_loader, _, _ = bank.loadData(arg_load_train=True, arg_load_val=False, arg_load_test=False)
+        _, _, asses_loader = bank.loadData(arg_load_train=False, arg_load_val=False, arg_load_test=True)
         print("Assessment Started")
         assesManyImages(used_model, asses_loader)
         return

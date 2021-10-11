@@ -5,10 +5,10 @@ from torch.utils.data import Dataset
 from skimage import io, transform
 from os import listdir
 from os.path import isfile, join
-import parameters as par
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
+import Network.parameters as par
 
 def listFilesInDir(dir):
     files = [join(dir, f) for f in listdir(dir) if isfile(join(dir, f))]

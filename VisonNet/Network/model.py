@@ -8,8 +8,8 @@ from torch import nn
 from datetime import datetime
 
 #My Files
-import parameters as par
-import OldCode.mobilenet_v2 as oldModelsMobileNetv2
+import Network.parameters as par
+import Network.OldCode.mobilenet_v2 as oldModelsMobileNetv2
 
 MODEL_ERROR_ID = -4
 

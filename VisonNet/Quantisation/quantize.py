@@ -9,9 +9,10 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 
-import Bankset as bank
-import parameters as par
-import model as mod
+
+import Network.parameters as par
+import Network.bankset as bank
+import Network.model as mod
 
 
 
@@ -157,18 +158,20 @@ if __name__ == '__main__':
 
 
     #Load Our Best Model
-    model = mod.create(load = True, loadPath = par.BEST_MODEL_PATH)
+    model = mod.UsedModel('Original_Resnet18',load = True, loadPath = par.BEST_MODEL_PATH)
     criterion = nn.CrossEntropyLoss()
     print('Loaded trained model')
+
+
 
     #Evaluate Our Model
     best_acc = 0
     num_train_batches = 8
-    model = model.to(quantDevice)
-    model.eval()
+    model.model.to(quantDevice)
+    model.model.eval()
 
     if DO_EVALUATE:
-        top1, top5 = evaluate(model, criterion, testloader, quantDevice)
+        top1, top5 = evaluate(model.model, criterion, testloader, quantDevice)
         print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
 
     modules_to_fuse = [['1', '2'],
@@ -188,11 +191,11 @@ if __name__ == '__main__':
                        ['7.0.downsample.0', '7.0.downsample.1'],
                        ['7.1.conv1', '7.1.bn1'],
                        ['7.1.conv2', '7.1.bn2']]
-
-    model = add_quant_stubs(model)
+    model.model.eval()
+    model.model = add_quant_stubs(model.model)
     #print(model)
-
-    model = torch.quantization.fuse_modules(model, modules_to_fuse)
+    model.model.eval()
+    model.model = torch.quantization.fuse_modules(model.model, modules_to_fuse)
     #print(model)
 
 
@@ -205,29 +208,32 @@ if __name__ == '__main__':
         print("Using qnnpack backend engine")
         torch.backends.quantized.engine = 'qnnpack'  # atm - not working in windows 10
 
-        white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
+        #Preform Static Quantisation:
+
+        #white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_ALLOW_LIST
+        white_list = torch.quantization.get_default_qconfig_propagation_list()
+        xx = torch.quantization.get_default_qat_module_mappings()
         white_list.remove(torch.nn.modules.linear.Linear)
         qconfig_dict = dict()
-
+        model.model.eval()
         for e in white_list:
             qconfig_dict[e] = torch.quantization.get_default_qconfig('qnnpack')
-        torch.quantization.propagate_qconfig_(model, qconfig_dict)
+        torch.quantization.propagate_qconfig_(model.model, qconfig_dict)
+        model.model.eval()
+        torch.quantization.prepare(model.model, inplace=True)
+        model.model.eval()
+        print("\nStarting Quantizising Imputs")
+        with torch.no_grad():
+            for i, data in enumerate(trainloader, 0):
+                if i % 1000 == 0 : print("Progress = " , i)
+                inputs, labels = data['image'], data['class']
+                model.model(inputs)
+        print("Imputs Quantized")
+        #v = model.model(trainloader.dataset.images[0]['class'])
 
-        torch.quantization.prepare(model, inplace=True)
-
-        #print(model)
-
-        #print("\nStarting Quantizising Imputs")
-        #with torch.no_grad():
-        #    for i, data in enumerate(trainloader, 0):
-        #        if i % 1000 == 0 : print("Progress = " , i)
-        #        inputs, labels = data['image'], data['class']
-        #        model(inputs)
-        #print("Imputs Quantized")
-        v = model(trainloader.dataset.images[0]['class'])
-
-        torch.quantization.convert(model, inplace=True)
+        torch.quantization.convert(model.model, inplace=True)
         print("Model Quantized")
+
 
     elif BACKEND_ENGINE == 'fbgemm':
         # fbgemm - works in x86 machines (Windows)
@@ -237,21 +243,23 @@ if __name__ == '__main__':
         print("Using unknown backend engine - aborting")
         exit(-3)
 
-    model.eval()
+    model.model.eval()
     if DO_EVALUATE:
         best_acc = 0
         num_train_batches = 4
-        model = model.to(quantDevice)
-        model.eval()
-        top1, top5 = evaluate(model, criterion, testloader, quantDevice)
+        model.model.to(quantDevice)
+        model.model.eval()
+        top1, top5 = evaluate(model.model, criterion, testloader, quantDevice)
 
         print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
 
     # save for mobile
+    model.model.to("cuda")
     for i, data in enumerate(testloader):
         inputs, labels = data['image'], data['class']
-        traced_script_module = torch.jit.trace(model, inputs)
+        traced_script_module = torch.jit.trace(model.model, inputs)
         traced_script_module.save("rn18quantized.pt")
         break
 
     print('Model Saved Successfully')
+
