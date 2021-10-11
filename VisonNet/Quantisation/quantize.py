@@ -147,10 +147,10 @@ if __name__ == '__main__':
                                                               std=[0.24467267, 0.23742135, 0.24701703]), ])
 
     #Load Data
-    testset = bank.Bankset(par.TESTSET_PATH, transform_test)
+    testset = bank.Bankset("/VisonApp/testset", transform_test)
     testloader = DataLoader(testset, batch_size=6, shuffle=True, num_workers=4)
 
-    trainset = bank.Bankset(par.DATASET_PATH, transform_test)
+    trainset = bank.Bankset("/VisonApp/dataset", transform_test)
     trainloader = DataLoader(trainset, batch_size=6, shuffle=True, num_workers=4)
 
     #Load Original Model
@@ -210,9 +210,9 @@ if __name__ == '__main__':
 
         #Preform Static Quantisation:
 
-        #white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_ALLOW_LIST
-        white_list = torch.quantization.get_default_qconfig_propagation_list()
-        xx = torch.quantization.get_default_qat_module_mappings()
+        white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
+        #white_list = torch.quantization.get_default_qconfig_propagation_list()
+        #xx = torch.quantization.get_default_qat_module_mappings()
         white_list.remove(torch.nn.modules.linear.Linear)
         qconfig_dict = dict()
         model.model.eval()
@@ -254,7 +254,7 @@ if __name__ == '__main__':
         print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
 
     # save for mobile
-    model.model.to("cuda")
+    model.model.to("cpu")
     for i, data in enumerate(testloader):
         inputs, labels = data['image'], data['class']
         traced_script_module = torch.jit.trace(model.model, inputs)

@@ -108,7 +108,7 @@ class UsedModel:
         if os.path.isfile(loadPath) is False:
             print('Loading Model File does not Exist')
             exit(MODEL_ERROR_ID)
-        self.model.load_state_dict(torch.load(loadPath), strict=False)
+        self.model.load_state_dict(torch.load(loadPath,map_location=torch.device('cpu')), strict=False)
         print("Model Loaded")
 
 

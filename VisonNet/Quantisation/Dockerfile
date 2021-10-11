@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:experimental
 #get Basics
 FROM ubuntu:20.10
 #set up environment
@@ -20,7 +21,7 @@ RUN mkdir testset
 RUN mkdir valset
 
 RUN mkdir Network
-COPY Network/Bankset.py Network/Bankset.py 
+COPY Network/bankset.py Network/bankset.py 
 COPY Quantisation/quantize.py Quantisation/quantize.py
 COPY ".idea" ".idea"
 
