@@ -138,7 +138,7 @@ def loadData(arg_load_train = True, arg_load_val = True,arg_load_test = True,
     print("Loaded",end=' ')
     if arg_load_train is True:
         trainset = Bankset(par.DATASET_PATH, transform_train)
-        trainloader = DataLoader(trainset, batch_size=16, shuffle=True, pin_memory=True, num_workers=4)
+        trainloader = DataLoader(trainset, batch_size=32, shuffle=True, pin_memory=True, num_workers=10)
         print("TrainSet",end=' ')
     if arg_load_val is True:
         valset = Bankset(par.VALSET_PATH, transform_val)

@@ -22,7 +22,7 @@ def __evaluateMain():
     evalDevice = torch.device(par.TRAIN_ARCH)
     #Empty GPU Cache before Evaluation starts
     if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
-    used_model = mod.UsedModel('Original_Resnet18', loadPath=MODEL_PATH,load=True)
+    used_model = mod.UsedModel('Original_Resnet18', arg_load_path=MODEL_PATH, arg_load=True)
     print("Evaluation Started")
     used_model.model.eval()
     model_accuracy, _ = evaluate(used_model, testloader, evalDevice)
@@ -53,7 +53,7 @@ def evaluate(used_model, data_loader, device):
 def __testMain():
 
     test_device = torch.device(par.TRAIN_ARCH)
-    used_model = mod.UsedModel('Original_Resnet18', loadPath=MODEL_PATH, load=True)
+    used_model = mod.UsedModel('Original_Resnet18', arg_load_path=MODEL_PATH, arg_load=True)
     #used_model.model.to(test_device)
     used_model.model.eval()
 
@@ -101,7 +101,7 @@ def multi():
     test_device = torch.device(par.TRAIN_ARCH)
     # Empty GPU Cache before Testing starts
     if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
-    used_model = mod.UsedModel('Original_Resnet18', loadPath=MODEL_PATH, load=True)
+    used_model = mod.UsedModel('Original_Resnet18', arg_load_path=MODEL_PATH, arg_load=True)
     used_model.model.eval()
     singleBatch = next(iter(testloader))
     input, label, name = singleBatch['image'], singleBatch['class'], singleBatch['name']

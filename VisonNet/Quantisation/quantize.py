@@ -158,7 +158,7 @@ if __name__ == '__main__':
 
 
     #Load Our Best Model
-    model = mod.UsedModel('Original_Resnet18',load = True, loadPath = par.BEST_MODEL_PATH)
+    model = mod.UsedModel(mod.ModelType.Original_Resnet18, arg_load= True, arg_load_path= par.BEST_MODEL_PATH, arg_load_device=par.QUANT_DEVICE)
     criterion = nn.CrossEntropyLoss()
     print('Loaded trained model')
 

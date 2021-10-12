@@ -34,7 +34,7 @@ def main():
     asses_device = torch.device(par.TRAIN_ARCH)
     if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
     # Load Model
-    used_model = mod.UsedModel('Original_Resnet18', loadPath=MODEL_PATH, load=True)
+    used_model = mod.UsedModel('Original_Resnet18', arg_load_path=MODEL_PATH, arg_load=True)
     # Choose what to do
     user_choice = mainMenu()
 

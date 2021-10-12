@@ -15,11 +15,14 @@ GRAD_PER_BATCH = 4
 MODEL_DIR = '../Models/'
 MODEL_NAME = 'OrgResnet18'
 MODEL_FILE_TYPE = '.pth'
-BEST_MODEL_PATH = '../Models/Original_Resnet18_08-10-2021_02-05_Epoch_0001_Acc_17.83.pth'
+BEST_MODEL_PATH = '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth' #Original_Resnet18_08-10-2021_02-05_Epoch_0001_Acc_17.83.pth'
 DATASET_PATH = '../Data/dataset'
 TESTSET_PATH = '../Data/testset'
 VALSET_PATH = '../Data/valset'
 
 #Quantisation Parameters
+QUANT_MODEL_PATH = 'resnetTa94pretrained.pth' #'../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'
+QUANT_DEVICE = 'cpu'
+DO_EVALUATE = False
 
 
