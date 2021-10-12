@@ -32,7 +32,7 @@ def main():
     if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
 
     # Prepare Model
-    used_model = mod.UsedModel('Original_Resnet18', arg_pretrained=True)
+    used_model = mod.UsedModel(mod.ModelType.Original_Resnet18, arg_pretrained=True)
     used_model.model.to(trainDevice)
     # Decays the learning rate of each parameter group by gamma once the number of epoch reaches one of the milestones.
     exp_lr_scheduler = lr_scheduler.MultiStepLR(used_model.optimizer, milestones=[4, 15, 20, 30, 40, 95], gamma=par.SCHEDULER_GAMMA)

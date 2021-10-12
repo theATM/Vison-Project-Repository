@@ -98,7 +98,7 @@ class UsedModel:
 
 
     @staticmethod
-    def __generateInitPath(arg_model_dir, arg_model_name):
+    def __generateInitPath(arg_model_dir, arg_model_name: ModelType):
         """ It creates standard name for saved model file
             (Directory) / Current Time _ Model Name _
             Rest of the path will be added later and will consist of
@@ -107,7 +107,7 @@ class UsedModel:
             different trainings sessions and models used. Atm"""
         now = datetime.now()  # Used to differentiate saved models
         now_str = now.strftime("%d-%m-%Y_%H-%M")
-        name_str = arg_model_dir + str(arg_model_name) + '_' + now_str + '_'
+        name_str = arg_model_dir + str(arg_model_name.name()) + '_' + now_str + '_'
         return name_str
 
 
