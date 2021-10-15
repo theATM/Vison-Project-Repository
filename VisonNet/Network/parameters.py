@@ -12,7 +12,6 @@ from enum import Enum
 
 # This is Enum class containing all parameter profiles.
 class ParametersProfileType(Enum):
-
     POKISIEK = 1
     ATM = 2
     # You can add new profile here
@@ -21,6 +20,7 @@ class ParametersProfileType(Enum):
 
 # Change to your profile
 PARAMETERS_PROFILE = ParametersProfileType.ATM
+#PARAMETERS_PROFILE = ParametersProfileType.POKISIEK
 
 # Check if profile is properly set up
 if not isinstance(PARAMETERS_PROFILE, ParametersProfileType):
@@ -54,6 +54,17 @@ if PARAMETERS_PROFILE == ParametersProfileType.POKISIEK:
     TESTSET_PATH = '../Data/testset'
     VALSET_PATH = '../Data/valset'
 
+    DATASET_BATCH_SIZE = 16
+    VALSET_BATCH_SIZE = 4
+    TESTSET_BATCH_SIZE = 4
+
+    DATASET_NUM_WORKERS = 8
+    VALSET_NUM_WORKERS = 2
+    TESTSET_NUM_WORKERS = 2
+
+
+
+
     ####################################################
 
     #Quantisation Parameters
@@ -85,6 +96,15 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     DATASET_PATH = '../Data/dataset'
     TESTSET_PATH = '../Data/testset'
     VALSET_PATH = '../Data/valset'
+
+    DATASET_BATCH_SIZE = 16
+    VALSET_BATCH_SIZE = 4
+    TESTSET_BATCH_SIZE = 4
+
+    DATASET_NUM_WORKERS = 8
+    VALSET_NUM_WORKERS = 2
+    TESTSET_NUM_WORKERS = 2
+
     ####################################################
 
     # Quantisation Parameters

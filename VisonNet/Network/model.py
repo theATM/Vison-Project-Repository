@@ -66,6 +66,7 @@ class UsedModel:
             self.criterion = nn.CrossEntropyLoss()
             self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
 
+
         else:
             print("Chosen Model Not Supported")
             exit(MODEL_ERROR_ID)

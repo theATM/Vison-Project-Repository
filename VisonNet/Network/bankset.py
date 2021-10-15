@@ -12,6 +12,8 @@ from itertools import chain
 import Network.parameters as par
 
 
+# Utilities Functions:
+
 # returns Dir name for eg. "/home/user/funny" -> "funny"
 def pickDirNameFromDirPath(dir):
     return dir.split("/")[-1]
@@ -80,8 +82,7 @@ anticlasses = {
 #Class containing one set of images.
 class Bankset(Dataset):
 
-
-    def __init__(self, root_dirs, transform=None):
+    def __init__(self, root_dirs, transform=None ):
         self.images = []
         # Allow single dir string
         if type(root_dirs) == str:
@@ -112,7 +113,6 @@ class Bankset(Dataset):
             item['image'] = self.transform(item['image'])
 
         return item
-
 
 
 #Loading Data Function
@@ -169,17 +169,18 @@ def loadData(arg_load_train = True, arg_load_val = True,arg_load_test = True,
     valloader = None
     testloader = None
     print("Loaded",end=' ')
+
     if arg_load_train is True:
         trainset = Bankset(par.DATASET_PATH, transform_train)
-        trainloader = DataLoader(trainset, batch_size=32, shuffle=True, pin_memory=True, num_workers=8)
+        trainloader = DataLoader(trainset, batch_size=par.DATASET_BATCH_SIZE, shuffle=True, pin_memory=True, num_workers=par.DATASET_NUM_WORKERS)
         print("TrainSet",end=' ')
     if arg_load_val is True:
         valset = Bankset(par.VALSET_PATH, transform_val)
-        valloader = DataLoader(valset, batch_size=4, shuffle=True, num_workers=2)
+        valloader = DataLoader(valset, batch_size=par.VALSET_BATCH_SIZE, shuffle=False, num_workers=par.VALSET_NUM_WORKERS)
         print("ValSet", end=' ')
     if arg_load_test is True:
         testset = Bankset(par.TESTSET_PATH, transform_test)
-        testloader = DataLoader(testset, batch_size=4, shuffle=True, num_workers=2)
+        testloader = DataLoader(testset, batch_size=par.TESTSET_BATCH_SIZE, shuffle=False, num_workers=par.TESTSET_NUM_WORKERS)
         print("TestSet", end=' ')
     if (arg_load_train or  arg_load_val or arg_load_test) is False:
         print("No Data")
