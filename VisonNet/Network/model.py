@@ -107,7 +107,7 @@ class UsedModel:
             different trainings sessions and models used. Atm"""
         now = datetime.now()  # Used to differentiate saved models
         now_str = now.strftime("%d-%m-%Y_%H-%M")
-        name_str = arg_model_dir + str(arg_model_name.name()) + '_' + now_str + '_'
+        name_str = arg_model_dir + str(arg_model_name.name) + '_' + now_str + '_'
         return name_str
 
 

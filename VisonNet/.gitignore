@@ -1,0 +1,6 @@
+Models/*
+Data/*
+visonvenv/*
+Quantisation/cache/*
+Network/OldCode/__pycache__/*
+.idea/*

@@ -4,15 +4,45 @@ import torchvision
 from torch.utils.data import Dataset
 from skimage import io, transform
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, isdir, dirname, join
 from torchvision import transforms
 from torch.utils.data import DataLoader
+from itertools import chain
 
 import Network.parameters as par
 
+
+# returns Dir name for eg. "/home/user/funny" -> "funny"
+def pickDirNameFromDirPath(dir):
+    return dir.split("/")[-1]
+
+
+#Lists all files in dir - recursive
 def listFilesInDir(dir):
-    files = [join(dir, f) for f in listdir(dir) if isfile(join(dir, f))]
-    return files
+    list = []
+    for f in listdir(dir):
+        if isfile(join(dir,f)):
+            list.append(join(dir,f))
+        elif isdir(join(dir,f)):
+            list.extend(listFilesInDir(join(dir,f)))
+        else:
+            pass
+    return list
+
+
+#Returns the list of dirs (dir paths)
+def listDirsInDir(dir):
+    return [str(dir + "/" + d) for d in listdir(dir) if not isdir(d)]
+
+
+#Checks if dir contains "class dirs" for eg. directory with name "10", "20" or "none:
+def checkDirIfContainsAllClasses(dir):
+    return True if len([subdir for subdir in listDirsInDir(dir) if pickDirNameFromDirPath(subdir) in classes]) == 7 else False
+
+
+#Returns list of Subdirs if they are not classes and when ty=hey are it returns the list with the arg file in it
+def listSubdirsIfPresent(dir):
+    return listDirsInDir(dir) if not checkDirIfContainsAllClasses(dir) else [dir]
 
 
 def listFilesInDirPol(dir, label):
@@ -50,16 +80,19 @@ anticlasses = {
 #Class containing one set of images.
 class Bankset(Dataset):
 
+
     def __init__(self, root_dirs, transform=None):
         self.images = []
-        #Allow single dir string
+        # Allow single dir string
         if type(root_dirs) == str:
             root_dirs = {root_dirs}
-        #Load Images
+        # Load Images
         for root_dir in root_dirs:
-            for value in classes:
-                tmp = map(lambda x: {'class': value, 'image':x}, listFilesInDir(f"{root_dir}/{value}/"))
-                self.images.extend(tmp)
+            #Check for subdirs
+            for sub_dir in listSubdirsIfPresent(root_dir):
+                for value in classes:
+                    tmp = map(lambda x: {'class': value, 'image': x}, listFilesInDir(f"{sub_dir}/{value}/"))
+                    self.images.extend(tmp)
 
         random.shuffle(self.images)
         self.transform = transform
@@ -138,7 +171,7 @@ def loadData(arg_load_train = True, arg_load_val = True,arg_load_test = True,
     print("Loaded",end=' ')
     if arg_load_train is True:
         trainset = Bankset(par.DATASET_PATH, transform_train)
-        trainloader = DataLoader(trainset, batch_size=32, shuffle=True, pin_memory=True, num_workers=10)
+        trainloader = DataLoader(trainset, batch_size=32, shuffle=True, pin_memory=True, num_workers=8)
         print("TrainSet",end=' ')
     if arg_load_val is True:
         valset = Bankset(par.VALSET_PATH, transform_val)
