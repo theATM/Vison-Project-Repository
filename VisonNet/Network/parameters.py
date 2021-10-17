@@ -1,5 +1,6 @@
 import torch
 from enum import Enum
+import model as mod
 """
     Welcome to the params.py 
     Here you could and should change all the parameters available in the VisonNet
@@ -72,18 +73,32 @@ if PARAMETERS_PROFILE == ParametersProfileType.POKISIEK:
     QUANT_DEVICE = 'cpu'
     DO_EVALUATE = False
 
+    ####################################################
+
+    #Model Parameters
+    USED_MODEL_TYPE = mod.ModelType.Original_Mobilenet2
+
+    if USED_MODEL_TYPE == mod.ModelType.Original_Mobilenet2:
+        #
+        x = 1
+    if USED_MODEL_TYPE == mod.ModelType.Original_Resnet18:
+        #
+        x = 2
+
+
+
 ########################################################################################################################
 
 if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     # Training Parameters
-    MAX_EPOCH_NUMBER = 400
+    MAX_EPOCH_NUMBER = 800
     TRAIN_ARCH = 'cuda:0'  # for cpu type 'cpu', for gpu type 'cuda' to check for gpu enter to command prompt nvidia-smi
-    LOAD_MODEL = False
+    LOAD_MODEL = True
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True  # zysk +2% cuda  (?)
     INITIAl_LEARNING_RATE = 0.01
     SCHEDULER_GAMMA = 0.8
-    EVAL_PER_EPOCHS = 20
+    EVAL_PER_EPOCHS = 40
     GRAD_PER_BATCH = 4
 
     ####################################################
@@ -111,3 +126,14 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     QUANT_MODEL_PATH = 'resnetTa94pretrained.pth'  # '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'
     QUANT_DEVICE = 'cpu'
     DO_EVALUATE = False
+
+
+    #Model Parameters
+    USED_MODEL_TYPE = mod.ModelType.Original_Mobilenet2
+
+    if USED_MODEL_TYPE == mod.ModelType.Original_Mobilenet2:
+        #
+        x = 1
+    if USED_MODEL_TYPE == mod.ModelType.Original_Resnet18:
+        #
+        x = 2

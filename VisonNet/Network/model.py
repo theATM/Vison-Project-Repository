@@ -7,10 +7,11 @@ import enum
 
 from torch import nn
 from datetime import datetime
+from torch.optim import lr_scheduler
 
 #My Files
 import Network.parameters as par
-import Network.OldCode.mobilenet_v2 as oldModelsMobileNetv2
+import Network.mobilenet as mobilenet
 
 MODEL_ERROR_ID = -4
 
@@ -19,19 +20,21 @@ class ModelType(enum.Enum):
     Original_Resnet18 = 1
     My_Resnet18 = 2
 
-    Old_Mobilenet2 = 11
+    Original_Mobilenet2 = 11
 
 
 
 class UsedModel:
 
     def __init__(self, arg_choose_model: ModelType, arg_pretrained=False, arg_quantize=False,
-                 arg_load=False, arg_load_path='', arg_load_device='', arg_remove_last_save=True):
+                 arg_load=False, arg_load_path='', arg_load_device='', arg_load_start_epoch=0, arg_remove_last_save=True):
 
         #Public Variables, some will be initialized later
         self.model = None
         self.criterion = None
         self.optimizer = None
+        self.scheduler = None
+        self.start_epoch = 0 #For Clean Start
         if arg_load is False:
             self.model_path =  self.__generateInitPath(par.MODEL_DIR, arg_choose_model)
         else:
@@ -42,34 +45,39 @@ class UsedModel:
         self.__model_dir = par.MODEL_DIR
         self.__model_saved = False
         self.__model_save_remove_last = arg_remove_last_save
-        self.__model_save_epoch = -1
-        self.__model_save_acc = -1.0
+        self.__model_save_epoch = None
+        self.__model_save_acc = None
+        self.__model_save_loss = None
 
         if arg_choose_model == ModelType.Original_Resnet18:
             print("Chosen Resnet18")
             # Prepare Model from Resnet
             original_model = originalModels.resnet18(pretrained=arg_pretrained, progress=True, quantize=arg_quantize)
             self.model = self.__createCombinedModel(original_model)
-            if arg_load is True: # to retrain / finetune
-                self.__loadModel(arg_load_path, arg_load_device)
-            else:
-                print("Model Created")
             # Create Criterion and Optimizer
             self.criterion = nn.CrossEntropyLoss()
             self.optimizer = optim.Adam(self.model.parameters(), lr=par.INITIAl_LEARNING_RATE)
+            self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[32, 128, 160, 256, 512, 720], gamma=par.SCHEDULER_GAMMA)
 
         #elif chooseModel == ModelType.My_Resnet18:
-        elif arg_choose_model == ModelType.Old_Mobilenet2:
+        elif arg_choose_model == ModelType.Original_Mobilenet2:
             # Prepare Model from MobileNet
-            self.model = oldModelsMobileNetv2.MobileNetV2(num_classes=7)
+            self.model = mobilenet.MobileNetV2(num_classes=7)
             # Create Criterion and Optimizer
             self.criterion = nn.CrossEntropyLoss()
             self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
-
+            self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[25, 60, 70, 80], gamma=0.1)
 
         else:
             print("Chosen Model Not Supported")
             exit(MODEL_ERROR_ID)
+
+        #Load Model
+        if arg_load is True:  # to retrain / finetune
+            self.__loadModel(arg_load_path, arg_load_device)
+            self.start_epoch = arg_load_start_epoch
+        else:
+            print("Model Created")
 
 
     @staticmethod
@@ -112,7 +120,7 @@ class UsedModel:
         return name_str
 
 
-    def __loadModel(self, arg_load_path, arg_load_device):
+    def __loadModel(self, arg_load_path, arg_load_device, arg_partial_load=True):
         if arg_load_path == '':
             print('Loading Model Path is Empty')
             exit(MODEL_ERROR_ID)
@@ -122,18 +130,32 @@ class UsedModel:
         if arg_load_device == '':
             print('loading Model Device not Specified')
             exit(MODEL_ERROR_ID)
-        self.model.load_state_dict(torch.load(arg_load_path, map_location=arg_load_device), strict=False)
+
+        #Load File:
+        model_load_dict = torch.load(arg_load_path, map_location=arg_load_device)
+
+        #Deserialize:
+        saved_model_states = model_load_dict['model']
+        saved_optim_states = model_load_dict['optimizer']
+        self.__model_save_epoch = model_load_dict['epoch']
+        self.__model_save_acc = model_load_dict['accuracy']
+        self.__model_save_loss = model_load_dict['loss']
+
+        # Load Model:
+        self.model.load_state_dict(saved_model_states, strict=not arg_partial_load)
+        self.optimizer.load_state_dict(saved_optim_states)
         print("Model Loaded")
 
 
-    def saveModel(self, arg_epoch, arg_acc):
+    def saveModel(self, arg_epoch=None, arg_acc=None, arg_loss=None):
         """ Saves Model to File while training, can remove last save too (from the same model) """
 
         #Create Savable copy of model
-        savedModel = copy.deepcopy(self.model.state_dict())
+        saved_model_states = copy.deepcopy(self.model.state_dict())
+        saved_optim_states = copy.deepcopy(self.optimizer.state_dict())
 
         #Checks whether should remove last model first
-        if  self.__model_saved is True \
+        if self.__model_saved is True \
             and self.__model_save_remove_last is True \
             and self.__model_save_epoch >= 0 \
             and self.__model_save_acc >= 0:
@@ -150,11 +172,25 @@ class UsedModel:
         #Update Training State Info
         self.__model_save_epoch = arg_epoch
         self.__model_save_acc = arg_acc
+        self.__model_save_loss = arg_loss
+
+        #Create Save Dictionary:
+        model_save_dict = \
+        {
+            'title': "This is save file of the model of the VisonNet - the PLN banknote recognition network",
+            'name': self.model_path,
+            'epoch': self.__model_save_epoch,
+            'accuracy': self.__model_save_acc,
+            'loss': self.__model_save_loss,
+            'optimizer': saved_optim_states,
+            'model': saved_model_states
+        }
 
         #Save Current Model
         model_save_path = self.getSavedModelPath()
-        torch.save(savedModel, model_save_path)
+        torch.save(model_save_dict, model_save_path)
         print("Saved Current Model on Epoch " + str(self.__model_save_epoch+1))
+
 
 
     def getSavedModelPath(self):
