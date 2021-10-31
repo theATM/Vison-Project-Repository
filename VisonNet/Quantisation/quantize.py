@@ -47,34 +47,6 @@ def create_combined_model(model_fe):
     return new_model
 
 
-def add_quant_stubs(model_fe):
-    new_model = nn.Sequential(
-        torch.quantization.QuantStub(),
-        model_fe[0][0],
-        model_fe[0][1],
-        model_fe[0][2],
-        model_fe[0][3],
-        nn.Sequential(
-            model_fe[0][4][0],
-            model_fe[0][4][1],
-        ),
-        nn.Sequential(
-            model_fe[0][5][0],
-            model_fe[0][5][1],
-        ),
-        nn.Sequential(
-            model_fe[0][6][0],
-            model_fe[0][6][1],
-        ),
-        model_fe[0][7],
-        model_fe[1],
-        torch.quantization.DeQuantStub(),
-        model_fe[2],
-    )
-
-    return new_model
-
-
 def evaluate(model, criterion, data_loader, device):
     model.eval()
     confusion_matrix = torch.zeros(7, 7)
@@ -136,8 +108,8 @@ if __name__ == '__main__':
         exit(-3)
 
     # Choose quantization device (cpu/gpu)
-    # If you have gpu On Linux go for it
-    quantDevice = torch.device('cpu')
+    # If you have gpu On Linux go for it - not sure if it works on gpu though
+    quantDevice = par.QUANT_DEVICE #torch.device('cpu')
 
     transform_test = transforms.Compose([transforms.ToPILImage(),
                                          transforms.Resize(224),
@@ -147,19 +119,24 @@ if __name__ == '__main__':
                                                               std=[0.24467267, 0.23742135, 0.24701703]), ])
 
     #Load Data
-    testset = bank.Bankset("/VisonApp/testset", transform_test)
-    testloader = DataLoader(testset, batch_size=6, shuffle=True, num_workers=4)
+    #testset = bank.Bankset("/VisonApp/testset", transform_test)
+    #testloader = DataLoader(testset, batch_size=2, shuffle=True, num_workers=0)
 
-    trainset = bank.Bankset("/VisonApp/dataset", transform_test)
-    trainloader = DataLoader(trainset, batch_size=6, shuffle=True, num_workers=4)
+    #trainset = bank.Bankset("/VisonApp/dataset", transform_test)
+    #trainloader = DataLoader(trainset, batch_size=2, shuffle=True, num_workers=0)
+
+    trainloader, _, testloader = bank.loadData(arg_load_train=True, arg_load_val=False, arg_load_test=True,
+                                         arg_trans_train=transform_test, quantisation_mode=True)
+
 
     #Load Original Model
-    original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
+    #original_model = models.resnet18(pretrained=True, progress=True, quantize=False)
 
 
     #Load Our Best Model
-    model = mod.UsedModel(mod.ModelType.Original_Resnet18, arg_load= True, arg_load_path= par.BEST_MODEL_PATH, arg_load_device=par.QUANT_DEVICE)
-    criterion = nn.CrossEntropyLoss()
+    model = mod.UsedModel(mod.ModelType.Original_Resnet18, arg_load=True, arg_load_path= par.QUANT_MODEL_PATH, arg_load_device=par.QUANT_DEVICE, arg_load_raw=True)
+    model.optimizer = optim.Adam(model.model.parameters(), lr=par.INITIAl_LEARNING_RATE)
+    #criterion = nn.CrossEntropyLoss()
     print('Loaded trained model')
 
 
@@ -171,31 +148,17 @@ if __name__ == '__main__':
     model.model.eval()
 
     if DO_EVALUATE:
-        top1, top5 = evaluate(model.model, criterion, testloader, quantDevice)
+        top1, top5 = evaluate(model.model, model.criterion, testloader, quantDevice)
         print('Evaluation accuracy on all test images, %2.2f'%(top1.avg))
 
-    modules_to_fuse = [['1', '2'],
-                       ['5.0.conv1', '5.0.bn1'],
-                       ['5.0.conv2', '5.0.bn2'],
-                       ['5.1.conv1', '5.1.bn1'],
-                       ['5.1.conv2', '5.1.bn2'],
 
-                       ['6.0.conv1', '6.0.bn1'],
-                       ['6.0.conv2', '6.0.bn2'],
-                       ['6.0.downsample.0', '6.0.downsample.1'],
-                       ['6.1.conv1', '6.1.bn1'],
-                       ['6.1.conv2', '6.1.bn2'],
-
-                       ['7.0.conv1', '7.0.bn1'],
-                       ['7.0.conv2', '7.0.bn2'],
-                       ['7.0.downsample.0', '7.0.downsample.1'],
-                       ['7.1.conv1', '7.1.bn1'],
-                       ['7.1.conv2', '7.1.bn2']]
     model.model.eval()
-    model.model = add_quant_stubs(model.model)
+    model.addQuantStubs()
+
+
     #print(model)
     model.model.eval()
-    model.model = torch.quantization.fuse_modules(model.model, modules_to_fuse)
+    model.model = torch.quantization.fuse_modules(model.model, model.getLayersToFuse())
     #print(model)
 
 
@@ -225,6 +188,7 @@ if __name__ == '__main__':
         print("\nStarting Quantizising Imputs")
         with torch.no_grad():
             for i, data in enumerate(trainloader, 0):
+                if (i + 1) % 2 == 0: break
                 if i % 1000 == 0 : print("Progress = " , i)
                 inputs, labels = data['image'], data['class']
                 model.model(inputs)
@@ -249,7 +213,7 @@ if __name__ == '__main__':
         num_train_batches = 4
         model.model.to(quantDevice)
         model.model.eval()
-        top1, top5 = evaluate(model.model, criterion, testloader, quantDevice)
+        top1, top5 = evaluate(model.model, testloader, quantDevice)
 
         print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
 

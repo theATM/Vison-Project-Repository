@@ -6,6 +6,20 @@ from torch import nn
 
 from torch.quantization import QuantStub, DeQuantStub
 
+'''
+    This is Mobilenetv2 model class file
+    Here one can find the architecture of the Mobilenet (v2) model
+    Code is taken from
+    Quantisiation tutorial:
+    https://pytorch.org/tutorials/advanced/static_quantization_tutorial.html?highlight=quantization
+    Old mobilenet link (you presumably need to check git history)"
+    https://github.com/pytorch/vision/blob/master/torchvision/models/mobilenet.py
+    And (most likely) on the new Mobilenetv2 file (circa summer 2020)
+    https://github.com/pytorch/vision/blob/master/torchvision/models/mobilenetv2.py
+    It was edited then by the original crew
+    And then copied here by the new crew
+'''
+
 
 def _make_divisible(v, divisor, min_value=None):
     """
@@ -118,9 +132,9 @@ class MobileNetV2(nn.Module):
         # building last several layers
         features.append(ConvBNReLU(input_channel, self.last_channel, kernel_size=1))
         # make it nn.Sequential
-        #self.quant = QuantStub()
+        #self.quant = QuantStub() # uncommented atm
         self.features = nn.Sequential(QuantStub(), *features, DeQuantStub())
-        #self.dequant = DeQuantStub()
+        #self.dequant = DeQuantStub() # uncommented atm
         # building classifier
         self.classifier = nn.Sequential(
             nn.Dropout(0.6),

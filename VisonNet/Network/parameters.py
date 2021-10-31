@@ -1,6 +1,8 @@
+import enum
+
 import torch
+import Network.modeltype as modtype
 from enum import Enum
-import model as mod
 """
     Welcome to the params.py 
     Here you could and should change all the parameters available in the VisonNet
@@ -9,6 +11,7 @@ import model as mod
     Than you should configure devices, batch sizes and amount of workers to work well on your machine.
     Have fun!
 """
+
 
 
 # This is Enum class containing all parameter profiles.
@@ -76,12 +79,12 @@ if PARAMETERS_PROFILE == ParametersProfileType.POKISIEK:
     ####################################################
 
     #Model Parameters
-    USED_MODEL_TYPE = mod.ModelType.Original_Mobilenet2
+    USED_MODEL_TYPE = modtype.ModelType.Original_Mobilenet2
 
-    if USED_MODEL_TYPE == mod.ModelType.Original_Mobilenet2:
+    if USED_MODEL_TYPE == modtype.ModelType.Original_Mobilenet2:
         #
         x = 1
-    if USED_MODEL_TYPE == mod.ModelType.Original_Resnet18:
+    if USED_MODEL_TYPE == modtype.ModelType.Original_Resnet18:
         #
         x = 2
 
@@ -107,7 +110,8 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     MODEL_DIR = '../Models/'
     MODEL_NAME = 'OrgResnet18'
     MODEL_FILE_TYPE = '.pth'
-    BEST_MODEL_PATH = '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'  # Original_Resnet18_08-10-2021_02-05_Epoch_0001_Acc_17.83.pth'
+    BEST_MODEL_PATH = "../Models/OriginalMobilenetQuantTest/Original_Mobilenet2_23-10-2021_16-38_Epoch_0004_Acc_20.07.pth"
+    #'../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'  # Original_Resnet18_08-10-2021_02-05_Epoch_0001_Acc_17.83.pth'
     DATASET_PATH = '../Data/dataset'
     TESTSET_PATH = '../Data/testset'
     VALSET_PATH = '../Data/valset'
@@ -120,20 +124,32 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     VALSET_NUM_WORKERS = 2
     TESTSET_NUM_WORKERS = 2
 
+
+
     ####################################################
 
     # Quantisation Parameters
-    QUANT_MODEL_PATH = 'resnetTa94pretrained.pth'  # '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'
+    QUANT_MODEL_PATH =  '../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68.pth'
+        #'../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68.pth'
+        # 'resnetTa94pretrained.pth'  # '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'
     QUANT_DEVICE = 'cpu'
     DO_EVALUATE = False
 
+    QUANT_DATASET_BATCH_SIZE = 4
+    QUANT_VALSET_BATCH_SIZE = 4
+    QUANT_TESTSET_BATCH_SIZE = 4
+
+    QUANT_DATASET_NUM_WORKERS = 0
+    QUANT_VALSET_NUM_WORKERS = 0
+    QUANT_TESTSET_NUM_WORKERS = 0
+
 
     #Model Parameters
-    USED_MODEL_TYPE = mod.ModelType.Original_Mobilenet2
+    USED_MODEL_TYPE = modtype.ModelType.Original_Resnet18 #modtype.ModelType.Original_Mobilenet2
 
-    if USED_MODEL_TYPE == mod.ModelType.Original_Mobilenet2:
+    if USED_MODEL_TYPE == modtype.ModelType.Original_Mobilenet2:
         #
         x = 1
-    if USED_MODEL_TYPE == mod.ModelType.Original_Resnet18:
+    if USED_MODEL_TYPE == modtype.ModelType.Original_Resnet18:
         #
         x = 2

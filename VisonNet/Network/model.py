@@ -12,22 +12,16 @@ from torch.optim import lr_scheduler
 #My Files
 import Network.parameters as par
 import Network.mobilenet as mobilenet
+from Network.modeltype import ModelType
+
 
 MODEL_ERROR_ID = -4
-
-
-class ModelType(enum.Enum):
-    Original_Resnet18 = 1
-    My_Resnet18 = 2
-
-    Original_Mobilenet2 = 11
-
 
 
 class UsedModel:
 
     def __init__(self, arg_choose_model: ModelType, arg_pretrained=False, arg_quantize=False,
-                 arg_load=False, arg_load_path='', arg_load_device='', arg_load_start_epoch=0, arg_remove_last_save=True):
+                 arg_load=False, arg_load_raw=False, arg_load_path='', arg_load_device='', arg_load_start_epoch=0, arg_remove_last_save=True):
 
         #Public Variables, some will be initialized later
         self.model = None
@@ -40,7 +34,7 @@ class UsedModel:
         else:
             self.model_path = arg_load_path
         #Private Variables
-        self.__model_type = arg_choose_model.name
+        self.__model_type = arg_choose_model #.name for string
         self.__model_file_type = par.MODEL_FILE_TYPE
         self.__model_dir = par.MODEL_DIR
         self.__model_saved = False
@@ -74,7 +68,7 @@ class UsedModel:
 
         #Load Model
         if arg_load is True:  # to retrain / finetune
-            self.__loadModel(arg_load_path, arg_load_device)
+            self.__loadModel(arg_load_path, arg_load_device, arg_load_raw=arg_load_raw)
             self.start_epoch = arg_load_start_epoch
         else:
             print("Model Created")
@@ -120,7 +114,7 @@ class UsedModel:
         return name_str
 
 
-    def __loadModel(self, arg_load_path, arg_load_device, arg_partial_load=True):
+    def __loadModel(self, arg_load_path, arg_load_device, arg_partial_load=True, arg_load_raw=False):
         if arg_load_path == '':
             print('Loading Model Path is Empty')
             exit(MODEL_ERROR_ID)
@@ -134,16 +128,26 @@ class UsedModel:
         #Load File:
         model_load_dict = torch.load(arg_load_path, map_location=arg_load_device)
 
-        #Deserialize:
-        saved_model_states = model_load_dict['model']
-        saved_optim_states = model_load_dict['optimizer']
-        self.__model_save_epoch = model_load_dict['epoch']
-        self.__model_save_acc = model_load_dict['accuracy']
-        self.__model_save_loss = model_load_dict['loss']
+        if arg_load_raw is False:
+            #Deserialize:
+            saved_model_states = model_load_dict['model']
+            saved_optim_states = model_load_dict['optimizer']
+            self.__model_save_epoch = model_load_dict['epoch']
+            self.__model_save_acc = model_load_dict['accuracy']
+            self.__model_save_loss = model_load_dict['loss']
+        else:
+            # For Bare Model Saves
+            saved_model_states = model_load_dict
+            saved_optim_states = None
+            self.__model_save_epoch = None
+            self.__model_save_acc = None
+            self.__model_save_loss = None
+
 
         # Load Model:
         self.model.load_state_dict(saved_model_states, strict=not arg_partial_load)
-        self.optimizer.load_state_dict(saved_optim_states)
+        if saved_optim_states != None:
+            self.optimizer.load_state_dict(saved_optim_states)
         print("Model Loaded")
 
 
@@ -205,6 +209,75 @@ class UsedModel:
         torch.save(self.model.state_dict(), "temp.p")
         print('Size (MB):', os.path.getsize("temp.p") / 1e6)
         os.remove('temp.p')
+
+    def fuzeModel(self):
+        if self.__model_type == ModelType.Original_Resnet18:
+            self.model = torch.quantization.fuse_modules(self.model, self.getLayersToFuse())
+        elif self.__model_type == ModelType.Original_Mobilenet2:
+            self.model.fuzeModel()
+        else:
+            print("Unrecognised model type")
+            exit(-1)
+
+    def getLayersToFuse(self):
+        if self.__model_type == ModelType.Original_Resnet18:
+            modules_to_fuse = [['1', '2'],
+                               ['5.0.conv1', '5.0.bn1'],
+                               ['5.0.conv2', '5.0.bn2'],
+                               ['5.1.conv1', '5.1.bn1'],
+                               ['5.1.conv2', '5.1.bn2'],
+
+                               ['6.0.conv1', '6.0.bn1'],
+                               ['6.0.conv2', '6.0.bn2'],
+                               ['6.0.downsample.0', '6.0.downsample.1'],
+                               ['6.1.conv1', '6.1.bn1'],
+                               ['6.1.conv2', '6.1.bn2'],
+
+                               ['7.0.conv1', '7.0.bn1'],
+                               ['7.0.conv2', '7.0.bn2'],
+                               ['7.0.downsample.0', '7.0.downsample.1'],
+                               ['7.1.conv1', '7.1.bn1'],
+                               ['7.1.conv2', '7.1.bn2']]
+            return modules_to_fuse
+        else:
+            print("Unrecognised model type")
+            exit(-1)
+
+
+    def addQuantStubs(self):
+        if self.__model_type == ModelType.Original_Resnet18:
+            self.model
+            new_model = nn.Sequential(
+                torch.quantization.QuantStub(),
+                self.model[0][0],
+                self.model[0][1],
+                self.model[0][2],
+                self.model[0][3],
+                nn.Sequential(
+                    self.model[0][4][0],
+                    self.model[0][4][1],
+                ),
+                nn.Sequential(
+                    self.model[0][5][0],
+                    self.model[0][5][1],
+                ),
+                nn.Sequential(
+                    self.model[0][6][0],
+                    self.model[0][6][1],
+                ),
+                self.model[0][7],
+                self.model[1],
+                torch.quantization.DeQuantStub(),
+                self.model[2],
+            )
+            self.model = new_model
+        elif self.__model_type == ModelType.Original_Mobilenet2:
+            return
+        else:
+            print("Unrecognised model type")
+            exit(-1)
+
+
 
 
 

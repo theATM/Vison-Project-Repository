@@ -4,10 +4,10 @@ import torchvision
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-import bankset as bank
-import parameters as par
-import model as mod
-import training as train
+import Network.bankset as bank
+import Network.parameters as par
+import Network.model as mod
+#import training as train
 from skimage import io
 
 MODEL_PATH = '../Models/OrgResnet18_11-09-2021_17-24_Epoch_0060_Acc_17.62.pth' #'../Models/resnetTa94pretrained.pth'
