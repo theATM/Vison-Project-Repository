@@ -1,23 +1,13 @@
-import os
 import torch
-import torchvision
 import time
-import copy
-import torch.optim as optim
-from torch import nn
-from torch.nn import utils
 from torch.nn.utils import clip_grad_norm_
-from torchsummary import summary
-from torchvision import transforms
-from torch.utils.data import DataLoader
-from torchvision.models import MobileNetV2
 from torch.optim import lr_scheduler
-from PIL import Image
 
-import bankset as bank
+from Network.Bank import bankset as bank
 import parameters as par
-import model as mod
-import evaluate as eva
+from Network.Architecture import model as mod
+from Network.Functional import evaluate as eva
+
 
 def main():
 

@@ -1,18 +1,12 @@
 import torch
-import torchvision
 import torch.optim as optim
-import copy
-import torchvision.models.quantization as models
 
 from torchvision import transforms
 from torch import nn
-from torch.utils.data import DataLoader
-from torch.optim import lr_scheduler
-
 
 import Network.parameters as par
-import Network.bankset as bank
-import Network.model as mod
+import Network.Bank.bankset as bank
+import Network.Architecture.model as mod
 
 
 

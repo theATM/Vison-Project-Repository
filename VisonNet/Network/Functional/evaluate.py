@@ -1,12 +1,10 @@
 import torch
-import torchvision
 
-from torch.utils.data import DataLoader
 from torchvision import transforms
 
-import Network.bankset as bank
+import Network.Bank.bankset as bank
 import Network.parameters as par
-import Network.model as mod
+import Network.Architecture.model as mod
 #import training as train
 from skimage import io
 

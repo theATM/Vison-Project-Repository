@@ -1,7 +1,5 @@
-import enum
-
 import torch
-import Network.modeltype as modtype
+import Network.Architecture.modeltype as modtype
 from enum import Enum
 """
     Welcome to the params.py 
@@ -124,14 +122,22 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     VALSET_NUM_WORKERS = 2
     TESTSET_NUM_WORKERS = 2
 
-
+    LOAD_RAW_MODEL = False
 
     ####################################################
 
     # Quantisation Parameters
-    QUANT_MODEL_PATH =  '../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68.pth'
+    QUANT_MODEL_PATH = "../Models/Quantarget/Original_Mobilenet2_22-10-2021_18-21_Epoch_0280_Acc_95.88.pth"
+    #"../Models/Quantarget/resnetTa94pretrained.pth"
+    #'../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68.pth'
         #'../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68.pth'
         # 'resnetTa94pretrained.pth'  # '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'
+
+    QUANT_SAVE_MODEL_PATH = "../Models/Quantized/MobiQuant123.pt"
+        #"../Models/Quantized/test1243.pt"
+
+    #QUANT_MODEL_TARGETDIR =
+
     QUANT_DEVICE = 'cpu'
     DO_EVALUATE = False
 

@@ -3,7 +3,6 @@ import copy
 import torch
 import torch.optim as optim
 import torchvision.models.quantization as originalModels
-import enum
 
 from torch import nn
 from datetime import datetime
@@ -11,8 +10,8 @@ from torch.optim import lr_scheduler
 
 #My Files
 import Network.parameters as par
-import Network.mobilenet as mobilenet
-from Network.modeltype import ModelType
+import Network.Architecture.mobilenet as mobilenet
+from Network.Architecture.modeltype import ModelType
 
 
 MODEL_ERROR_ID = -4
@@ -267,8 +266,8 @@ class UsedModel:
                 ),
                 self.model[0][7],
                 self.model[1],
-                torch.quantization.DeQuantStub(),
                 self.model[2],
+                torch.quantization.DeQuantStub(),
             )
             self.model = new_model
         elif self.__model_type == ModelType.Original_Mobilenet2:

@@ -7,9 +7,9 @@ from os.path import isfile, join
 
 #Data Parameters
 BEST_MODEL_DIR = 'OldModels/'
-DATASET_PATH = '../../Data/dataset'
-TESTSET_PATH = '../../Data/testset'
-VALSET_PATH = '../../Data/valset'
+DATASET_PATH = '../../../Data/dataset'
+TESTSET_PATH = '../../../Data/testset'
+VALSET_PATH = '../../../Data/valset'
 
 
 def listFilesInDir(dir):
