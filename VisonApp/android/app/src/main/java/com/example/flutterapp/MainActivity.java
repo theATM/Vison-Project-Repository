@@ -47,21 +47,31 @@ public class MainActivity extends FlutterActivity {
         // Here the Pretrained Neural Network Selection:
         // ORIGINAL : resnet_18_acc94_29.pt
         // BEST : resnet_18_acc94_29.pt
+        Log.d("tOTOAJ OLEK","dadA");
         module = getModel("resnet_18_acc94_29.pt");
+        //"rn18quantized20atm.pt"); //""resnet_18_acc94_29.pt");
     }
 
     private MethodChannel flutterChannel;
 
     @Override
-    public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
+    public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine)
+    {
+
         super.configureFlutterEngine(flutterEngine);
         _flutterEngine = flutterEngine; 
         flutterChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL);
-        flutterChannel.setMethodCallHandler(
-                        (call, result) -> {
-                            if (call.method.equals("getPrediction")) {
-                                try {
-                                    neuralNetThreadPool.execute(() -> {
+
+        flutterChannel
+                .setMethodCallHandler(
+                        (call, result) ->
+                        {
+                            if (call.method.equals("getPrediction"))
+                            {
+                                try
+                                {
+                                    neuralNetThreadPool.execute(() ->
+                                    {
                                         long start = System.currentTimeMillis();
                                         byte[] plateY = call.argument("Y");
                                         byte[] plateU = call.argument("U");
@@ -76,17 +86,21 @@ public class MainActivity extends FlutterActivity {
                                         YuvImage x = new YuvImage(yuv, ImageFormat.NV21, width, height, null);
 
                                         int x1, x2, y1, y2;
-                                        if (width > height) {
+                                        if (width > height)
+                                        {
                                             x1 = (width - height) / 2;
                                             x2 = x1 + height;
                                             y1 = 0;
                                             y2 = height;
-                                        } else {
+                                        }
+                                        else
+                                        {
                                             x1 = 0;
                                             x2 = width;
                                             y1 = (height - width) / 2;
                                             y2 = y1 + width;
                                         }
+
                                         Rect r = new Rect(x1, y1, x2, y2);
                                         ByteArrayOutputStream bs = new ByteArrayOutputStream();
                                         x.compressToJpeg(r, 100, bs);
@@ -94,18 +108,26 @@ public class MainActivity extends FlutterActivity {
                                         int res = getInferenceResults(bs);
 
                                         // Wysłanie wyników do Fluttera
-                                        new Handler(Looper.getMainLooper()).post(() -> {
-                                            flutterChannel.invokeMethod("predictionResult", new HashMap<String, Integer>() {{
-                                                put("result", res);
-                                            }});
+                                        new Handler(Looper.getMainLooper()).post(() ->
+                                        {
+                                            flutterChannel
+                                                    .invokeMethod("predictionResult",
+                                                            new HashMap<String, Integer>()
+                                                            {{
+                                                                put("result", res);
+                                                            }});
                                         });
                                     });
-                                } catch (Exception e) {
+                                }
+                                catch (Exception e)
+                                {
                                     e.printStackTrace();
                                     result.success(false);
                                     return;
                                 }
-                            } else {
+                            }
+                            else
+                            {
                                 result.notImplemented();
                                 return;
                             }
@@ -115,7 +137,8 @@ public class MainActivity extends FlutterActivity {
     };
 
 
-    private int getInferenceResults(ByteArrayOutputStream binaryStream) {
+    private int getInferenceResults(ByteArrayOutputStream binaryStream)
+    {
         long start = System.currentTimeMillis();
         ByteArrayInputStream istream = new ByteArrayInputStream(binaryStream.toByteArray());
 
@@ -129,7 +152,8 @@ public class MainActivity extends FlutterActivity {
 
         long stop = System.currentTimeMillis();
         long time = stop - start;
-        if(isDebug) {
+        if(isDebug)
+        {
             Log.d("Time", "Convert bitmap to float tensor: " +time);
         }
 
@@ -137,7 +161,8 @@ public class MainActivity extends FlutterActivity {
         long sxd = System.currentTimeMillis();
         time = sxd - stop;
 
-        if(isDebug) {
+        if(isDebug)
+        {
             Log.d("Time", "Inference: " + time);
         }
 
@@ -145,26 +170,34 @@ public class MainActivity extends FlutterActivity {
 
         int maxInd = -1;
         float max = -999999.0f;
-        for (int i = 0; i < scores.length; i++) {
-            if (max < scores[i]) {
+        for (int i = 0; i < scores.length; i++)
+        {
+            if (max < scores[i])
+            {
                 max = scores[i];
                 maxInd = i;
             }
-            if(isDebug) {
+            if(isDebug)
+            {
                 Log.d("SCORES", String.format("Class: %d -----  %f", i, scores[i]));
             }
         }
-        if(isDebug) {
+        if(isDebug)
+        {
             Log.d("Prediction", String.format("Class: %d -----  %f", maxInd, scores[maxInd]));
         }
         return maxInd;
     }
 
-    public Module getModel(String name) {
+    public Module getModel(String name)
+    {
         Module m = null;
-        try {
+        try
+        {
             m = Module.load(assetFilePath(this, name));
-        } catch(Exception e){
+        }
+        catch(Exception e)
+        {
             Log.d("Exception", e.toString());
             e.printStackTrace();
             return m;
@@ -172,7 +205,8 @@ public class MainActivity extends FlutterActivity {
         return m;
     }
 
-    public static String assetFilePath(Context context, String assetName) throws IOException {
+    public static String assetFilePath(Context context, String assetName) throws IOException
+    {
         File file = new File(context.getFilesDir(), assetName);
         if (file.exists() && file.length() > 0) {
             return file.getAbsolutePath();
