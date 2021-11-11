@@ -21,6 +21,7 @@ Models/*
 Environment/visonvenv/*
 
 #Don't add caches
+*__pycache__*
 Environment/quantenv/cache/*
 
 #Do not send to repo the "old code"

@@ -4,7 +4,7 @@ from torch.nn.utils import clip_grad_norm_
 from torch.optim import lr_scheduler
 
 from Network.Bank import bankset as bank
-import parameters as par
+import Network.parameters as par
 from Network.Architecture import model as mod
 from Network.Functional import evaluate as eva
 
