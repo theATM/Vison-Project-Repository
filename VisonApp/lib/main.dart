@@ -220,6 +220,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
 
   @override
   void initState() {
+    debugPrint('Starting....');
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // To display the current output from the Camera,
