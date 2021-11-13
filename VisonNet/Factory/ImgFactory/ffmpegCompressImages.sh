@@ -30,7 +30,8 @@ scale_image ()
 	image_full_path=$1  						# dir1/dir2/image_name.type
 	full_dir_path=$2						# dir1/dir2/
 	dir_path=${full_dir_path/$INPUT_DIR\//}				# dir2/
-	image_file=$(basename -- "$image_full_path") 			# image_name.type
+	image_file=$(echo $image_full_path | sed "s/^${INPUT_DIR}\///") # image_name.type
+	image_name=$(basename -- "$image_full_path") 			
 	echo $image_name
 	image_type="${image_name##*.}" 					# .type
 	echo $image_type
@@ -41,7 +42,7 @@ scale_image ()
 		mkdir "${OUTPUT_DIR}/${dir_path}"
 	fi
 	#Define out path
-	full_out_path="${OUTPUT_DIR}/${dir_path}${image_name}c${image_type}"
+	full_out_path="${OUTPUT_DIR}/${dir_path}${image_name}c.${image_type}"
 	echo $image_name
 	echo $image_full_path
 	#Scale img to 244:244
