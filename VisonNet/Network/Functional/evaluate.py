@@ -3,9 +3,9 @@ import torch
 from torchvision import transforms
 
 import Network.Bank.bankset as bank
+import Network.Bank.transforms as trans
 import Network.parameters as par
 import Network.Architecture.model as mod
-#import training as train
 from skimage import io
 
 MODEL_PATH = '../Models/OrgResnet18_11-09-2021_17-24_Epoch_0060_Acc_17.62.pth' #'../Models/resnetTa94pretrained.pth'
@@ -55,13 +55,7 @@ def __testMain():
     #used_model.model.to(test_device)
     used_model.model.eval()
 
-    transform_test = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(224),
-        transforms.CenterCrop((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])
-        ])
+    transform_test = trans.TRANSFORM_DEFAULT
 
     image = io.imread(Image_PATH)
     image = transform_test(image)

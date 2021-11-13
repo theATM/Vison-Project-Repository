@@ -7,29 +7,48 @@
 # L extracted - there will be our images
 # L.. <videodir> - there will be images from specific video
 # L waiting - file where we copy videos we want to cut
+#Better to edit this script on linux - or from inside the docker container - using nano
+#When editing this file on Windows:
+#After edit you need to change cloasing character
+#Use "sed -i -e 's/\r$//' scriptname.sh" inside docker machine
+#And then run the script
 
+#Into:
 #First some variables:
 INPUT_DIR="waiting"
-OUTPUT_FOLDER="compressed"
+OUTPUT_DIR="compressed"
+#And Greetings
 echo "This script creates scaled img from img"
 echo "They are also scaled to 244:244"
 
 
 
-
+#Actual Scaling:
 scale_image ()
 {
 	#Variables
-	image_full_path=$1  							# dir1/dir2/image_name.type
-	whole_path=$2									# dir1/dir2/
-	image_file=$(basename -- "$image_full_path") 	# image_name.type
+	image_full_path=$1  						# dir1/dir2/image_name.type
+	full_dir_path=$2						# dir1/dir2/
+	dir_path=${full_dir_path/$INPUT_DIR\//}				# dir2/
+	image_file=$(basename -- "$image_full_path") 			# image_name.type
+	echo $image_name
 	image_type="${image_name##*.}" 					# .type
+	echo $image_type
 	image_name="${image_name%.*}" 					# image_name
-	
+	echo $image_name
+	#Check if needed to add dirs
+	if [ ! -z $dir_path ]; then
+		mkdir "${OUTPUT_DIR}/${dir_path}"
+	fi
+	#Define out path
+	full_out_path="${OUTPUT_DIR}/${dir_path}${image_name}c${image_type}"
+	echo $image_name
+	echo $image_full_path
 	#Scale img to 244:244
-	ffmpeg -i "${INPUT_DIR}/${video_file_path}" -vf scale=244:244 "${INPUT_DIR}/tmp.${video_file_type}"
+	ffmpeg -i $image_full_path -vf scale=244:244 $full_out_path
 }
 
+#Main Loop:
 get_all_files ()
 {
 	#Go through all files
@@ -55,21 +74,7 @@ get_all_files ()
 	done
 }	
 	
-		#video_file_path=$(echo $video | sed "s/^${INPUT_DIR}\///") 
-		#video_file_name=$(basename -- "$video_file_path")
-		#video_file_type="${video_file_name##*.}"
-		#video_file_name="${video_file_name%.*}"
-		#Scale video to 640:480p
-		#ffmpeg -i "${INPUT_DIR}/${video_file_path}" -vf scale=244:244 "${INPUT_DIR}/tmp.${video_file_type}"		
-		#Create dir to save images
-		#mkdir "${OUTPUT_FOLDER}/${video_file_name}"
-		#output_file_path="./${OUTPUT_FOLDER}/${video_file_name}/${video_file_name}s_%003d.png"
-		#Remember to set frames(-r) per second(-t) 
-		#Cut video to images:
-		#ffmpeg -ss 00:00 -i "${INPUT_DIR}/tmp.${video_file_type}" -r 30 $output_file_path
-		#rm "${INPUT_DIR}/tmp.${video_file_type}"	
-		
-
+#Start:
 get_all_files $INPUT_DIR
 echo "Done"
 #to hold terminal at the end:

@@ -7,6 +7,10 @@
 # L extracted - there will be our images
 # L.. <videodir> - there will be images from specific video
 # L waiting - file where we copy videos we want to cut
+#When editing this file on Windows:
+#After edit you need to change cloasing character
+#Use "sed -i -e 's/\r$//' scriptname.sh" inside docker machine
+#And then run the script
 
 #First some variables:
 INPUT_DIR="waiting"

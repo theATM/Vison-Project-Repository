@@ -5,6 +5,7 @@ from torchvision import transforms
 
 import Network.parameters as par
 import Network.Bank.bankset as bank
+import Network.Bank.transforms as trans
 import Network.Architecture.model as mod
 import Network.Functional.evaluate as eva
 
@@ -39,12 +40,7 @@ def quantMain():
 
     # Load Data
     #TODO: transforms
-    transform_for_quant = transforms.Compose([transforms.ToPILImage(),
-                                         transforms.Resize(224),
-                                         transforms.CenterCrop((224, 224)),
-                                         transforms.ToTensor(),
-                                         transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701],
-                                                              std=[0.24467267, 0.23742135, 0.24701703]), ])
+    transform_for_quant = trans.TRANSFORM_QUANTIZE
 
     dataset_loader, _, _ = bank.loadData(arg_load_train=True, arg_load_val=False, arg_load_test=False,
                                          arg_trans_train=transform_for_quant, quantisation_mode=True)

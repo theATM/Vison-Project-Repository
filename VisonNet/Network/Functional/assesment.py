@@ -9,9 +9,10 @@ from torchvision import transforms
 from skimage import io
 from PIL import Image  # , ImageTk
 # Prove of concept
-import bankset as bank
-import parameters as par
-import model as mod
+import Network.Bank.bankset as bank
+import Network.Bank.transforms as trans
+import Network.parameters as par
+import Network.Architecture.model as mod
 
 
 MODEL_PATH = '../Models/resnetTa94pretrained.pth'
@@ -19,13 +20,8 @@ MY_IMAGE_PATH = '../Data/testset/500/63.jpg'
 SHOW_ONLY_NEGATIVE = True #used when assesing many images  - the program would stop only on those predicted wrong
 SCAN_FOR_WORST = True #used to show the worst pedicted picture in dataset
 
-transform_asses = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.Resize(224),
-    transforms.CenterCrop((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701], std=[0.24467267, 0.23742135, 0.24701703])
-])
+transform_asses = trans.TRANSFORM_DEFAULT
+
 
 def main():
     print("Welcome to the assessment program")
