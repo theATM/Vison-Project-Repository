@@ -30,14 +30,13 @@ Network/Old/*
 #Temporary exclude
 Network/Architecture/resnet*
 
-Factory/ImgFactory/waiting/*
-Factory/ImgFactory/compressed/*
-
 #Factory - do not save data to the repo
 Factory/MovFactory/waiting/*
 !Factory/MovFactory/waiting/info.txt
 Factory/MovFactory/extracted/*
 !Factory/MovFactory/extracted/info.txt
 
+Factory/ImgFactory/waiting/*
+Factory/ImgFactory/compressed/*
 
 

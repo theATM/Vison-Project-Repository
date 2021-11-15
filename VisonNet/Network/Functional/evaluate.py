@@ -1,27 +1,42 @@
 import torch
-
+import enum
 from torchvision import transforms
 
 import Network.Bank.bankset as bank
 import Network.Bank.transforms as trans
+import Network.Bank.banksethelpers as bah
 import Network.parameters as par
 import Network.Architecture.model as mod
+import Network.Architecture.modeltype as modtype
 from skimage import io
 
-MODEL_PATH = '../Models/OrgResnet18_11-09-2021_17-24_Epoch_0060_Acc_17.62.pth' #'../Models/resnetTa94pretrained.pth'
-MODE = 'Test' #'Evaluate'
+MODEL_PATH = '../../Models/Quantout/ResQuant84or96First.pt' #"../../Models/Quantin/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68_rs.pth"
+#'../Models/OrgResnet18_11-09-2021_17-24_Epoch_0060_Acc_17.62.pth' #'../Models/resnetTa94pretrained.pth'
+MODEL_TYPE = modtype.ModelType.Original_Resnet18
+
+
+class EvalMode(enum.Enum):
+    EVAL = 1
+    TEST = 2
+
+
+MODE = EvalMode.EVAL
 
 Image_PATH = '../../../Data/testset/500/63.jpg'
 Image_Label = 500
 
+
 def __evaluateMain():
     #Load Data
     _, _, testloader = bank.loadData(arg_load_train=False,arg_load_val=False,arg_load_test=True)
-    evalDevice = torch.device(par.TRAIN_ARCH)
+    evalDevice = torch.device(par.QUANT_DEVICE)#par.TRAIN_ARCH)
     #Empty GPU Cache before Evaluation starts
     if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
-    used_model = mod.UsedModel('Original_Resnet18', arg_load_path=MODEL_PATH, arg_load=True)
+    #used_model = mod.UsedModel(MODEL_TYPE, arg_load_path=MODEL_PATH, arg_load=True, arg_load_device=evalDevice)
+    used_model = mod.UsedModel(modtype.ModelType.Original_Resnet18, arg_load_path=MODEL_PATH)
+    used_model.model = torch.jit.load(MODEL_PATH)
     print("Evaluation Started")
+    used_model.model.to(evalDevice)
     used_model.model.eval()
     model_accuracy, _ = evaluate(used_model, testloader, evalDevice)
     print('Evaluation Accuracy on all test images, %2.2f' % (model_accuracy.avg))
@@ -31,8 +46,8 @@ def __evaluateMain():
 
 def evaluate(used_model, data_loader, device):
 
-    top1 = bank.AverageMeter('Accuracy', ':6.2f')
-    top3 = bank.AverageMeter('In Top 3', ':6.2f')
+    top1 = bah.AverageMeter('Accuracy', ':6.2f')
+    top3 = bah.AverageMeter('In Top 3', ':6.2f')
 
     with torch.no_grad():
         for i, data in enumerate(data_loader):
@@ -126,9 +141,9 @@ def accuracy(output, target, topk=(1,)):
 
 if __name__ == '__main__':
     # Run main function
-    if(MODE == 'Eval'):
+    if(MODE == EvalMode.EVAL):
         __evaluateMain()
-    elif(MODE == 'Test'):
+    elif(MODE == EvalMode.TEST):
         __testMain()
     else:
         print('Unknown mode set')

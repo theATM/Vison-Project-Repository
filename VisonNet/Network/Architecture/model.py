@@ -19,8 +19,12 @@ MODEL_ERROR_ID = -4
 
 class UsedModel:
 
-    def __init__(self, arg_choose_model: ModelType, arg_pretrained=False, arg_quantize=False,
+    def __init__(self, arg_choose_model: ModelType, arg_pretrained=False, arg_load_quantized=False,
                  arg_load=False, arg_load_raw=False, arg_load_path='', arg_load_device='', arg_load_start_epoch=0, arg_remove_last_save=True):
+
+        #Check if arguments make sense
+        if arg_load_quantized is True and arg_load is False: exit(-1) # Cant quantize without loading a model
+        if arg_load_raw is True and arg_load is False: exit(-1)
 
         #Public Variables, some will be initialized later
         self.model = None
@@ -28,11 +32,18 @@ class UsedModel:
         self.optimizer = None
         self.scheduler = None
         self.start_epoch = 0 #For Clean Start
+
+        #Get current time to differentiate models
+        current_time = datetime.now().strftime("%d.%m.%Y_%H:%M")
+
+        #Create Future Save Path
         if arg_load is False:
-            self.model_path =  self.__generateInitPath(par.MODEL_DIR, arg_choose_model)
+            self.model_path, self.dir_path = self.__generateSaveTemplatePath(par.PATH_PREFIX, par.MODEL_DIR, arg_choose_model)
         else:
-            self.model_path = arg_load_path
+            self.model_path, self.dir_path = self.__generateSaveTemplatePathForLoad(arg_load_path)
+
         #Private Variables
+        self.__reference_time = current_time #used to differentiate saved models from one training session from another
         self.__model_type = arg_choose_model #.name for string
         self.__model_file_type = par.MODEL_FILE_TYPE
         self.__model_dir = par.MODEL_DIR
@@ -45,7 +56,7 @@ class UsedModel:
         if arg_choose_model == ModelType.Original_Resnet18:
             print("Chosen Resnet18")
             # Prepare Model from Resnet
-            original_model = originalModels.resnet18(pretrained=arg_pretrained, progress=True, quantize=arg_quantize)
+            original_model = originalModels.resnet18(pretrained=arg_pretrained, progress=True, quantize=False)
             self.model = self.__createCombinedModel(original_model)
             # Create Criterion and Optimizer
             self.criterion = nn.CrossEntropyLoss()
@@ -66,9 +77,12 @@ class UsedModel:
             exit(MODEL_ERROR_ID)
 
         #Load Model
-        if arg_load is True:  # to retrain / finetune
-            self.__loadModel(arg_load_path, arg_load_device, arg_load_raw=arg_load_raw)
-            self.start_epoch = arg_load_start_epoch
+        if arg_load is True:
+            if arg_load_quantized is True: # Loading quantized model
+                self.__loadQuantizedModel(arg_load_path)
+            else: # Loading normal (float) model
+                self.__loadModel(arg_load_path, arg_load_device, arg_load_raw=arg_load_raw)
+                self.start_epoch = arg_load_start_epoch
         else:
             print("Model Created")
 
@@ -100,17 +114,31 @@ class UsedModel:
 
 
     @staticmethod
-    def __generateInitPath(arg_model_dir, arg_model_name: ModelType):
-        """ It creates standard name for saved model file
-            (Directory) / Current Time _ Model Name _
-            Rest of the path will be added later and will consist of
-            Training Epoch _ Model Accuracy . File Type
+    def __generateSaveTemplatePath(arg_path_prefix, arg_model_dir, arg_model_name: ModelType):
+        """ It creates standard name for future saved model file
             This naming convention is used to differentiate between
             different trainings sessions and models used. Atm"""
         now = datetime.now()  # Used to differentiate saved models
         now_str = now.strftime("%d-%m-%Y_%H-%M")
-        name_str = arg_model_dir + str(arg_model_name.name) + '_' + now_str + '_'
-        return name_str
+        #Dir for all newly saved models
+        save_dir_path= arg_path_prefix + '/' + arg_model_dir + '/' + str(arg_model_name) + '_' + now_str
+        #Saced model template path
+        save_template_path = save_dir_path + '/' + str(arg_model_name) + '_' + now_str
+        return save_template_path, save_dir_path
+
+    @staticmethod
+    def __generateSaveTemplatePathForLoad(arg_load_path):
+        """ It creates standard name for future saved model file
+            created from loaded model. Atm"""
+        now = datetime.now()  # Used to differentiate saved models
+        now_str = now.strftime("%d.%m.%Y_%H:%M")
+        # Break up load path into path and file name
+        [dir_path, load_file_name] = arg_load_path.rsplit('/',1)
+        save_dir_name = load_file_name.rsplit('_', 4)[0] + '_' + 'R' + '_' + now_str
+        # Generate paths
+        save_dir_path = dir_path + '/' + save_dir_name
+        save_template_path = save_dir_path + '/' + save_dir_name
+        return save_template_path, save_dir_path
 
 
     def __loadModel(self, arg_load_path, arg_load_device, arg_partial_load=True, arg_load_raw=False):
@@ -149,6 +177,16 @@ class UsedModel:
             self.optimizer.load_state_dict(saved_optim_states)
         print("Model Loaded")
 
+    def __loadQuantizedModel(self, arg_load_path):
+        if arg_load_path == '':
+            print('Loading Model Path is Empty')
+            exit(MODEL_ERROR_ID)
+        if os.path.isfile(arg_load_path) is False:
+            print('Loading Model File does not Exist')
+            exit(MODEL_ERROR_ID)
+
+        self.model = torch.jit.load(arg_load_path)
+        print("Model Loaded")
 
     def saveModel(self, arg_epoch=None, arg_acc=None, arg_loss=None):
         """ Saves Model to File while training, can remove last save too (from the same model) """
@@ -156,6 +194,12 @@ class UsedModel:
         #Create Savable copy of model
         saved_model_states = copy.deepcopy(self.model.state_dict())
         saved_optim_states = copy.deepcopy(self.optimizer.state_dict())
+
+        #Creates directory for all saved models
+        if self.__model_saved is False:
+            os.mkdir(self.dir_path)
+            print("Created folder for the saved models")
+
 
         #Checks whether should remove last model first
         if self.__model_saved is True \
@@ -172,27 +216,40 @@ class UsedModel:
             else:
                 print("Last Model Save File is Missing, cannot Remove it")
 
-        #Update Training State Info
+
+        # Update Training State Info
         self.__model_save_epoch = arg_epoch
         self.__model_save_acc = arg_acc
         self.__model_save_loss = arg_loss
 
-        #Create Save Dictionary:
+        # Create Save Dictionary:
         model_save_dict = \
-        {
-            'title': "This is save file of the model of the VisonNet - the PLN banknote recognition network",
-            'name': self.model_path,
-            'epoch': self.__model_save_epoch,
-            'accuracy': self.__model_save_acc,
-            'loss': self.__model_save_loss,
-            'optimizer': saved_optim_states,
-            'model': saved_model_states
-        }
+            {
+                'title': "This is save file of the model of the VisonNet - the PLN banknote recognition network",
+                'name': self.model_path,
+                'epoch': self.__model_save_epoch,
+                'accuracy': self.__model_save_acc,
+                'loss': self.__model_save_loss,
+                'optimizer': saved_optim_states,
+                'model': saved_model_states
+            }
 
-        #Save Current Model
+        # Save Current Model
         model_save_path = self.getSavedModelPath()
         torch.save(model_save_dict, model_save_path)
-        print("Saved Current Model on Epoch " + str(self.__model_save_epoch+1))
+        self.__model_saved = True  # set as saved
+        print("Saved Current Model on Epoch " + str(self.__model_save_epoch + 1))
+
+    def saveQuantizedModel(self, arg_save_model_path, arg_needed_dataset_loader):
+        print("Started Saving Model")
+        for i, data in enumerate(arg_needed_dataset_loader):
+            inputs, labels = data['image'], data['class']
+            traced_script_module = torch.jit.trace(self.model, inputs)
+            traced_script_module.save(arg_save_model_path)
+            break
+
+        print('Model Saved Successfully')
+
 
 
 

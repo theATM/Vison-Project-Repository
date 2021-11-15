@@ -10,7 +10,7 @@ import Network.Architecture.model as mod
 import Network.Functional.evaluate as eva
 
 BACKEND_ENGINE = ''  #quantization engine
-DO_EVALUATE = False
+DO_EVALUATE = True
 quantDevice = None
 
 def quantMain():
@@ -72,17 +72,6 @@ def quantMain():
         q_config_dict[e] = quant.get_default_qconfig(BACKEND_ENGINE)
     quant.propagate_qconfig_(quant_model.model, q_config_dict)
 
-    #white_list = torch.quantization.DEFAULT_QCONFIG_PROPAGATE_WHITE_LIST
-    #white_list.remove(torch.nn.modules.linear.Linear)
-    #qconfig_dict = dict()
-    #quant_model.model.eval()
-    #for e in white_list:
-    #    qconfig_dict[e] = torch.quantization.get_default_qconfig('qnnpack')
-    #torch.quantization.propagate_qconfig_(quant_model.model, qconfig_dict)
-
-
-
-    #quant_model.model.qconfig = quant.default_qconfig
     quant.prepare(quant_model.model, inplace=True)
 
     #Calibrate
@@ -90,7 +79,7 @@ def quantMain():
     quant_model.model.eval()
     with torch.no_grad():
         for i, data in enumerate(dataset_loader, 0):
-            if (i+1) % 2 == 0: break
+            #if (i+1) % 2 == 0: break
             if i % 1000 == 0: print("Progress = ", i)
             inputs, labels = data['image'], data['class']
             quant_model.model(inputs)
@@ -102,23 +91,17 @@ def quantMain():
 
     # Evaluate Our Model
 
-    print("Started Evaluation")
-    quant_model.model.eval()
-    top1, top5 = eva.evaluate(quant_model, dataset_loader, par.QUANT_DEVICE) #todo? QuantizedCPU
-    print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
+    if DO_EVALUATE:
+        print("Started Evaluation")
+        quant_model.model.eval()
+        top1, top5 = eva.evaluate(quant_model, dataset_loader, par.QUANT_DEVICE)
+        print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
 
 
     # save for mobile
-    print("Started Saving Model")
-    for i, data in enumerate(dataset_loader):
-        inputs, labels = data['image'], data['class']
-        traced_script_module = torch.jit.trace(quant_model.model, inputs)
-        traced_script_module.save(par.QUANT_SAVE_MODEL_PATH)
-        break
+    quant_model.saveQuantizedModel(par.QUANT_SAVE_MODEL_PATH,dataset_loader)
 
-    print('Model Saved Successfully')
-
-
+    print("Done")
 
 
 if __name__ == '__main__':

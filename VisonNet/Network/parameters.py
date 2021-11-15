@@ -105,14 +105,11 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     ####################################################
 
     # Data Parameters
-    MODEL_DIR = '../../Models/'
-    MODEL_NAME = 'OrgResnet18'
-    MODEL_FILE_TYPE = '.pth'
-    BEST_MODEL_PATH = "../../Models/OriginalMobilenetQuantTest/Original_Mobilenet2_23-10-2021_16-38_Epoch_0004_Acc_20.07.pth"
-    #'../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'  # Original_Resnet18_08-10-2021_02-05_Epoch_0001_Acc_17.83.pth'
-    DATASET_PATH = '../../Data/dataset'
-    TESTSET_PATH = '../../Data/testset'
-    VALSET_PATH = '../../Data/valset'
+    PATH_PREFIX = "../.."
+    DATA_DIR = "Data"
+    DATASET_PATH = PATH_PREFIX+'/'+DATA_DIR+'/'+'dataset'
+    TESTSET_PATH = PATH_PREFIX+'/'+DATA_DIR+'/'+'testset'
+    VALSET_PATH  = PATH_PREFIX+'/'+DATA_DIR+'/'+'valset'
 
     DATASET_BATCH_SIZE = 16
     VALSET_BATCH_SIZE = 4
@@ -126,17 +123,40 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
 
     ####################################################
 
+    # Model Parameters
+
+    MODEL_DIR = 'Models'
+    MODEL_FILE_TYPE = '.pth' # Model Presumed extension
+    BEST_MODEL_PATH = PATH_PREFIX + '/' + MODEL_DIR + '/' \
+                      + 'Original_Mobilenet2_23-10-2021_16-38_Epoch_0004_Acc_20.07.pth'
+    # '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'  # Original_Resnet18_08-10-2021_02-05_Epoch_0001_Acc_17.83.pth'
+    USED_MODEL_TYPE = modtype.ModelType.Original_Resnet18 #modtype.ModelType.Original_Mobilenet2
+
+
+    ####################################################
+
     # Quantisation Parameters
-    QUANT_MODEL_PATH = "../../Models/Quantin/Original_Mobilenet2_22-10-2021_18-21_Epoch_0280_Acc_95.88.pth"
+    QUANT_MODEL_INDIR = "Quantin"
+    QUANT_MODEL_OUTDIR = "Quantout"
+
+
+
+    QUANT_MODEL_PATH = PATH_PREFIX + '/' + MODEL_DIR + '/' + QUANT_MODEL_INDIR + '/' \
+                        + 'Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68_rs.pth'
+                      # + 'Original_Mobilenet2_22-10-2021_18-21_Epoch_0280_Acc_95.88.pth'
+
+    #    "../../Models/Quantin/Original_Mobilenet2_22-10-2021_18-21_Epoch_0280_Acc_95.88.pth"
     #"../Models/Quantarget/resnetTa94pretrained.pth"
     #'../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68.pth'
-        #'../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68.pth'
-        # 'resnetTa94pretrained.pth'  # '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'
+    #'../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68.pth'
+    # 'resnetTa94pretrained.pth'  # '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'
 
-    QUANT_SAVE_MODEL_PATH = "../../Models/Quantout/MobiQuant123.pt"
-        #"../Models/Quantized/test1243.pt"
+    QUANT_SAVE_MODEL_PATH = PATH_PREFIX + '/' + MODEL_DIR + '/' + QUANT_MODEL_OUTDIR + '/' \
+                            + 'ResQuant84First.pt'
+    #"../Models/Quantized/test1243.pt"
 
-    #QUANT_MODEL_TARGETDIR =
+
+
 
     QUANT_DEVICE = 'cpu'
     DO_EVALUATE = False
@@ -149,13 +169,3 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     QUANT_VALSET_NUM_WORKERS = 0
     QUANT_TESTSET_NUM_WORKERS = 0
 
-
-    #Model Parameters
-    USED_MODEL_TYPE = modtype.ModelType.Original_Resnet18 #modtype.ModelType.Original_Mobilenet2
-
-    if USED_MODEL_TYPE == modtype.ModelType.Original_Mobilenet2:
-        #
-        x = 1
-    if USED_MODEL_TYPE == modtype.ModelType.Original_Resnet18:
-        #
-        x = 2
