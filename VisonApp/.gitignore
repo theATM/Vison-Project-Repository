@@ -45,6 +45,8 @@ android/key.properties
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries
+android/build.gradle
+android/gradle/*
 
 # Gradle and Maven with auto-import
 .idea/modules.xml
