@@ -4,6 +4,7 @@ from torch.nn.utils import clip_grad_norm_
 from torch.optim import lr_scheduler
 
 from Network.Bank import bankset as bank
+import Network.Bank.banksethelpers as bah
 import Network.parameters as par
 from Network.Architecture import model as mod
 from Network.Functional import evaluate as eva
@@ -70,9 +71,9 @@ def main():
 def train_one_epoch(used_model, data_loader, trainDevice, nEpoch):
 
     # Defines statistical variables
-    top1 = bank.AverageMeter('Accuracy', ':6.2f')
-    top3 = bank.AverageMeter('In Top 3', ':6.2f')
-    avgLoss = bank.AverageMeter('Loss', '1.5f')
+    top1 = bah.AverageMeter('Accuracy', ':6.2f')
+    top3 = bah.AverageMeter('In Top 3', ':6.2f')
+    avgLoss = bah.AverageMeter('Loss', '1.5f')
     epochStartTime = time.time()
     multi_batch_loss = 0.0
 

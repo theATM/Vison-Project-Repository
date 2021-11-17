@@ -32,19 +32,11 @@ scale_image ()
 	dir_path=${full_dir_path/$INPUT_DIR\//}				# dir2/
 	image_file=$(echo $image_full_path | sed "s/^${INPUT_DIR}\///") # image_name.type
 	image_name=$(basename -- "$image_full_path") 			
-	echo $image_name
 	image_type="${image_name##*.}" 					# .type
-	echo $image_type
 	image_name="${image_name%.*}" 					# image_name
-	echo $image_name
-	#Check if needed to add dirs
-	if [ ! -z $dir_path ]; then
-		mkdir "${OUTPUT_DIR}/${dir_path}"
-	fi
 	#Define out path
-	full_out_path="${OUTPUT_DIR}/${dir_path}${image_name}c.${image_type}"
-	echo $image_name
-	echo $image_full_path
+	full_out_path="${OUTPUT_DIR}/${dir_path}/${image_name}c.${image_type}"
+	echo $full_out_path
 	#Scale img to 244:244
 	ffmpeg -i $image_full_path -vf scale=244:244 $full_out_path
 }
@@ -54,21 +46,19 @@ get_all_files ()
 {
 	#Go through all files
 	parent_dir=$1
-	whole_path="{$2}{$parent_dir}/"
 	for file_or_dir in $parent_dir/*
 	do
-		#echo "work"
-		#echo $file_or_dir
 		# If it is a file
 		if [ -f "${file_or_dir}" ]; then 
 			#echo "file"
 			file=$file_or_dir
-			scale_image $file
+			scale_image $file $parent_dir
 		# If this is a dir
 		elif [ -d "${file_or_dir}" ]; then
-			#echo "dir"
 			dir=$file_or_dir
-			get_all_files $dir $whole_path
+			dir_path="${OUTPUT_DIR}/${dir/$INPUT_DIR\//}"
+			mkdir $dir_path
+			get_all_files $dir
 		else
 			echo "none"
 		fi
