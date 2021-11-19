@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 import 'package:soundpool/soundpool.dart';
-//import 'package:flutter_flashlight/flutter_flashlight.dart';
+import 'package:flutter_flashlight/flutter_flashlight.dart';
 
 
 
@@ -63,7 +63,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
   List<String> money = ["10", "20", "50", "100", "200", "500", "None"];
   List<int> _currentPredictionsList = new List.generate(8, (int index) => 0);
   int maxCorrectPredictionsInSequence =
-      4; // this is arbitrary and can be changed.
+  4; // this is arbitrary and can be changed.
   String defaultDisplayMessage = "Skieruj kamerę na banknot!";
   String currentDisplayMessage = "";
   bool hasDetectedPrediction = false;
@@ -73,6 +73,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
   Map vibrationmap = new Map();
   // sound
   Map soundmap = new Map();
+  int _NoneIter = 40;
   // flashlight
   bool hasFlash = false;
   bool flashlight = false;
@@ -87,22 +88,40 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
     }
   }
 
+  void updatePredictionAction(int prediction) async {
 
+    if (this.money[prediction] == 'None') {
+      if(_NoneIter > 0){
+        _NoneIter = _NoneIter - 1;
+      } else {
+        await this.soundpool.play(this.soundmap['None']);
+        _NoneIter = 40;
+      }
+      debugPrint('NoneIter: '+_NoneIter.toString());
+    }
 
-  void updatePredictionMessage(int prediction) async {
     // if has detected prediction previously, do nothing.
     if (this.hasDetectedPrediction) {
       return;
     }
 
-    if (this.money[_prediction] == 'None') {
-      this.currentDisplayMessage = defaultDisplayMessage;
+    if (this.money[prediction] != 'None') {
+      predictionActions(this.money[prediction]);
+    }
 
-    } else {
-      predictionActions(this.money[_prediction]);
-      setState(() {
-        this.currentDisplayMessage = "Banknot " + money[_prediction] + " złoty";
-      });
+  }
+
+  void flashlightAction(double value){
+    // if this device has flashlight and it is not completely dark
+    if(value < 30 && flashlight == false){
+      flashlight = true;
+      _flashIter = 20;
+    } else if(value > 70 && flashlight == true){
+      _flashIter = _flashIter - 1;
+    }
+
+    if(_flashIter == 0 && flashlight == true){
+      flashlight == false;
     }
   }
 
@@ -111,35 +130,14 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
     var framesU = cameraImage.planes[1].bytes;
     var framesV = cameraImage.planes[2].bytes;
 
-
-
-
     double yValue = 0.0;
-    //double uValue = 0.0;
-    //double vValue = 0.0;
 
     yValue = framesY.map((e) => e).reduce((yValue, element) => yValue + element) / framesY.length;
-    //uValue = framesU.map((e) => e).reduce((uValue, element) => uValue + element) / framesU.length;
-    //vValue = framesV.map((e) => e).reduce((vValue, element) => vValue + element) / framesV.length;
 
     debugPrint('Y mean:  $yValue');
 
-    if (true) {
-
-      if (yValue < 30 && flashlight == false){
-        flashlight = true;
-        _flashIter = 20;
-      } else if (yValue > 70 && flashlight == true){
-        _flashIter = _flashIter - 1;
-      }
-
-      if (flashlight == true && _flashIter == 0){
-        flashlight = false;
-      }
-
-    }
-
-    /*if (yValue < 15) {
+    // if there is completely dark, wait 1 second and try with another input
+    if (yValue < 10) {
       setState(() {
         busy = true;
       });
@@ -148,7 +146,9 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
         busy = false;
       });
       return;
-    }*/
+    } else if (this.hasFlash) {
+      flashlightAction(yValue);
+    }
 
     try {
       platform.invokeMethod('getPrediction', <String, dynamic>{
@@ -177,13 +177,11 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
     }
   }
 
-  /*void checkFlashlightOptions() async {
+  void checkFlashlightOptions() async {
     if (await Flashlight.hasFlashlight){
       this.hasFlash = true;
     }
   }
-*/
-
 
   void loadSoundAssets() async {
     this.soundpool = Soundpool(streamType: StreamType.music);
@@ -220,6 +218,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
 
   @override
   void initState() {
+    debugPrint('Starting....');
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // To display the current output from the Camera,
@@ -234,13 +233,11 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
     _initializeControllerFuture = _controller.initialize();
 
     this.checkDeviceVibrationOptions();
-    this.currentDisplayMessage = defaultDisplayMessage;
     this.loadSoundAssets();
     this.loadVibrationOptions();
-    //this.checkFlashlightOptions();
+    this.checkFlashlightOptions();
 
     platform.setMethodCallHandler((MethodCall call) async {
-
 
       if (call.method == "predictionResult") {
         final args = call.arguments;
@@ -264,9 +261,10 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
         if (this._currentPredictionsList.length >=
             this.maxCorrectPredictionsInSequence) {
           this._prediction = this._currentPredictionsList.last;
-          this.updatePredictionMessage(this._prediction);
+          this.updatePredictionAction(this._prediction);
           this.hasDetectedPrediction = true;
         }
+
         if (this.flashlight) {
           _controller.setFlashMode(FlashMode.torch);
         } else _controller.setFlashMode(FlashMode.off);
