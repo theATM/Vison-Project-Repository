@@ -1,0 +1,42 @@
+# This is .gitignore file for the VisonNet subproject 
+# (all files mentioned here are ignored by git and therefore nod added to the repository)
+
+#Don't add  IDE files as they are different for each programmer
+.idea/*
+
+#Don't add any cache files
+#TODO
+
+#Don't add Data as it contains many GB of images not siuted for the repo
+Data/*
+#Except for the info file
+!Data/info.txt
+
+#Dont add any created models (big files)
+Models/*
+#Except for the info file
+!Models/info.txt
+
+#Don't add venv (they contain all installed libs) into repo (many GB)
+Environment/visonvenv/*
+
+#Don't add caches
+*__pycache__*
+Environment/quantenv/cache/*
+
+#Do not send to repo the "old code"
+Network/Old/*
+
+#Temporary exclude
+Network/Architecture/resnet*
+
+#Factory - do not save data to the repo
+Factory/MovFactory/waiting/*
+!Factory/MovFactory/waiting/info.txt
+Factory/MovFactory/extracted/*
+!Factory/MovFactory/extracted/info.txt
+
+Factory/ImgFactory/waiting/*
+Factory/ImgFactory/compressed/*
+
+

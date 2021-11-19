@@ -1,0 +1,8 @@
+Here you can cut the video into images (by frame) - linux only!
+(We used this script to create more data)
+The Images are automaticly compressed (you can change veraiables inside the script)
+Files/Directories (Crete when not present)
+-ffmpegCutnScaleMany.sh - run this bash script on Linux
+-waiting - here insert the video you want to be cut into images
+-extracted - here (inside the folder with the video name) will be saved all images from the video
+-ideas - legacy scripts (not important)
