@@ -95,6 +95,9 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
         _NoneIter = _NoneIter - 1;
       } else {
         await this.soundpool.play(this.soundmap['None']);
+        if (this.hasVibration && this.hasCustomVibrationsSupport) {
+          Vibration.vibrate(pattern: this.vibrationmap['None']);
+        }
         _NoneIter = 40;
       }
       debugPrint('NoneIter: '+_NoneIter.toString());
@@ -140,6 +143,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
     if (yValue < 10) {
       setState(() {
         busy = true;
+        flashlight = false;
       });
       await Future.delayed(Duration(seconds: 1));
       setState(() {
@@ -208,6 +212,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
 
   void loadVibrationOptions() {
     // in millis.
+    this.vibrationmap["None"] = [0, 150, 150];
     this.vibrationmap["10"] = [0, 300];
     this.vibrationmap["20"] = [0, 300, 300, 300];
     this.vibrationmap["50"] = [0, 300, 300, 300, 300, 300];
