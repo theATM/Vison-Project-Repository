@@ -99,7 +99,7 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     torch.backends.cudnn.benchmark = True  # zysk +2% cuda  (?)
     INITIAl_LEARNING_RATE = 0.01
     SCHEDULER_GAMMA = 0.8
-    EVAL_PER_EPOCHS = 40
+    EVAL_PER_EPOCHS = 20
     GRAD_PER_BATCH = 4
 
     ####################################################
@@ -120,6 +120,7 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     TESTSET_NUM_WORKERS = 2
 
     LOAD_RAW_MODEL = False
+    SINGLE_BATCH_TEST = False # Will run the model with only one batch to see if it works properly
 
     ####################################################
 
@@ -130,7 +131,9 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     BEST_MODEL_PATH = PATH_PREFIX + '/' + MODEL_DIR + '/' \
                       + 'Original_Mobilenet2_23-10-2021_16-38_Epoch_0004_Acc_20.07.pth'
     # '../Models/Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'  # Original_Resnet18_08-10-2021_02-05_Epoch_0001_Acc_17.83.pth'
-    USED_MODEL_TYPE = modtype.ModelType.Original_Resnet18 #modtype.ModelType.Original_Mobilenet2
+    USED_MODEL_TYPE = modtype.ModelType.Original_Resnet18
+    # modtype.ModelType.Original_Resnet18
+    # modtype.ModelType.Original_Mobilenet2
 
 
     ####################################################

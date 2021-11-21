@@ -20,7 +20,7 @@ MODEL_ERROR_ID = -4
 class UsedModel:
 
     def __init__(self, arg_choose_model: ModelType, arg_pretrained=False, arg_load_quantized=False,
-                 arg_load=False, arg_load_raw=False, arg_load_path='', arg_load_device='', arg_load_start_epoch=0, arg_remove_last_save=True):
+                 arg_load=False, arg_load_raw=False, arg_load_path='', arg_load_device='', arg_remove_last_save=False):
 
         #Check if arguments make sense
         if arg_load_quantized is True and arg_load is False: exit(-1) # Cant quantize without loading a model
@@ -82,7 +82,7 @@ class UsedModel:
                 self.__loadQuantizedModel(arg_load_path)
             else: # Loading normal (float) model
                 self.__loadModel(arg_load_path, arg_load_device, arg_load_raw=arg_load_raw)
-                self.start_epoch = arg_load_start_epoch
+                self.start_epoch = self.__model_save_epoch
         else:
             print("Model Created")
 

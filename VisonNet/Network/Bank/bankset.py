@@ -136,7 +136,7 @@ def loadData(arg_load_train = True, arg_load_val = True, arg_load_test = True,
     if single_batch_test is True:
         #Preform Single Batch Test
         single_batch_dataset = sbt.SingleBatchTestSet(trainloader)
-        trainloader = DataLoader(single_batch_dataset, batch_size=6, shuffle=True, pin_memory=True, num_workers=4)
+        trainloader = DataLoader(single_batch_dataset, batch_size=1, shuffle=True, pin_memory=True, num_workers=4)
         print("Single Batch Test Chosen")
 
     return trainloader, valloader, testloader

@@ -13,7 +13,7 @@ from Network.Functional import evaluate as eva
 def main():
 
     # Load Data
-    trainloader, valloader, testloader = bank.loadData()
+    trainloader, valloader, testloader = bank.loadData(single_batch_test=par.SINGLE_BATCH_TEST)
 
     # Creating devices  - choosing where will training/eval calculate (gpu or cpu)
     trainDevice = torch.device(par.TRAIN_ARCH)
@@ -23,9 +23,27 @@ def main():
     if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
 
     # Prepare Model
-    #used_model = mod.UsedModel(mod.ModelType.Original_Resnet18, arg_pretrained=True,arg_load = par.LOAD_MODEL, arg_load_path="../Models/Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pth",arg_load_device=par.TRAIN_ARCH)
-    used_model = mod.UsedModel(par.USED_MODEL_TYPE)
-    used_model.model.to(trainDevice)
+    if par.LOAD_MODEL is True:
+        used_model = mod.UsedModel(par.USED_MODEL_TYPE, arg_load = par.LOAD_MODEL, arg_load_path="../../Models/ModelType.Original_Resnet18_20-11-2021_18-17/ModelType.Original_Resnet18_20-11-2021_18-17Epoch_0100_Acc_48.12.pth",arg_load_device=par.TRAIN_ARCH)
+        used_model.model.to(trainDevice)
+        for param in used_model.optimizer.state.values():  # TODO - need to send loaded optimizer into trainDevice
+            # Not sure there are any global tensors in the state dict
+            if isinstance(param, torch.Tensor):
+                param.data = param.data.to(trainDevice)
+                if param._grad is not None:
+                    param._grad.data = param._grad.data.to(trainDevice)
+            elif isinstance(param, dict):
+                for subparam in param.values():
+                    if isinstance(subparam, torch.Tensor):
+                        subparam.data = subparam.data.to(trainDevice)
+                        if subparam._grad is not None:
+                            subparam._grad.data = subparam._grad.data.to(trainDevice)
+    else:
+        used_model = mod.UsedModel(par.USED_MODEL_TYPE, arg_pretrained=True)
+        used_model.model.to(trainDevice)
+        #used_model.optimizer.to(trainDevice)
+
+
     # Decays the learning rate of each parameter group by gamma once the number of epoch reaches one of the milestones.
     exp_lr_scheduler = lr_scheduler.MultiStepLR(used_model.optimizer, milestones=[32, 128, 160, 256, 512, 720], gamma=par.SCHEDULER_GAMMA)
 
@@ -34,7 +52,7 @@ def main():
     # Training Network
     print('Training Started')
     #training_start_time = time.time()
-    for nEpoch in range(par.MAX_EPOCH_NUMBER):
+    for nEpoch in range(used_model.start_epoch, par.MAX_EPOCH_NUMBER):
         print('\n' + 'Epoch ' + str(nEpoch+1) + ':')
         # Training Model
         used_model.model.train()
@@ -77,12 +95,14 @@ def train_one_epoch(used_model, data_loader, trainDevice, nEpoch):
     epochStartTime = time.time()
     multi_batch_loss = 0.0
 
-
     # Training Loop (Through all data pictures)
+
     for i, data in enumerate(data_loader):
+        #try:
         inputs = torch.autograd.Variable(data['image'].to(trainDevice, non_blocking=True))
         labels = torch.autograd.Variable(data['class'].to(trainDevice, non_blocking=True))
-
+        #except (IOError, ValueError) as e:
+        #    print('could not read the file ', e, 'hence skipping it.')
         # passes and weights update
         with torch.set_grad_enabled(True):
 

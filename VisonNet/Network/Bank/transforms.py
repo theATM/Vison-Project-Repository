@@ -25,8 +25,9 @@ TRANSFORM_TRAIN = \
         torchvision.transforms.Resize(224),
         torchvision.transforms.CenterCrop((224, 224)),
         bsh.RandomRotationTransform(angles=[-90, 90, 0, 180, -180]),
-        torchvision.transforms.RandomHorizontalFlip(p=0.5),
-        torchvision.transforms.RandomVerticalFlip(p=0.5),
+        torchvision.transforms.RandomRotation(180), # this will rotate the image - note when not "fully" rotated (eg in 45 deg) will have black corners
+        #torchvision.transforms.RandomHorizontalFlip(p=0.5), #Never!! do that mirror of 200 is not a 200!
+        #torchvision.transforms.RandomVerticalFlip(p=0.5), #Never!! do that either!
         torchvision.transforms.ColorJitter(brightness=(0.75, 1.45), contrast=0.5, saturation=0.5, hue=0.3),
         torchvision.transforms.RandomApply(
             [torchvision.transforms.Grayscale(num_output_channels=3)],

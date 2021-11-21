@@ -2,6 +2,7 @@
 #this script cuts video into frames - images (if video is in 30fps) and resizes them to 640:480p
 #To make it work:
 #Script must be (in default case) inside this specific structure:
+# Note - dirs cant contain spaces
 # Main Dir
 # L this script (ffmpegCutNScaleMany.sh)
 # L extracted - there will be our images
