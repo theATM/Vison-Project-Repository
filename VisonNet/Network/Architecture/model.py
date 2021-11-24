@@ -56,7 +56,7 @@ class UsedModel:
         if arg_choose_model == ModelType.Original_Resnet18:
             print("Chosen Resnet18")
             # Prepare Model from Resnet
-            original_model = originalModels.resnet18(pretrained=arg_pretrained, progress=True, quantize=False)
+            original_model = originalModels.resnet18(pretrained=arg_pretrained, progress=True, quantize=False) #TODO pytania koamila?
             self.model = self.__createCombinedModel(original_model)
             # Create Criterion and Optimizer
             self.criterion = nn.CrossEntropyLoss()

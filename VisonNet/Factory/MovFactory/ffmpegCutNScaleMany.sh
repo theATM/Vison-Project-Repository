@@ -27,8 +27,8 @@ do
 		video_file_name=$(basename -- "$video_file_path")
 		video_file_type="${video_file_name##*.}"
 		video_file_name="${video_file_name%.*}"
-		#Scale video to 640:480p
-		ffmpeg -i "${INPUT_DIR}/${video_file_path}" -vf scale=640:480 "${INPUT_DIR}/tmp.${video_file_type}"		
+		#Scale video to 244:244
+		ffmpeg -i "${INPUT_DIR}/${video_file_path}" -vf scale=244:244 "${INPUT_DIR}/tmp.${video_file_type}"		
 		#Create dir to save images
 		mkdir "${OUTPUT_FOLDER}/${video_file_name}"
 		output_file_path="./${OUTPUT_FOLDER}/${video_file_name}/${video_file_name}s_%003d.png"
