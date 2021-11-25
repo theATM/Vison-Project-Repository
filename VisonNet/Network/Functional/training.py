@@ -24,7 +24,7 @@ def main():
 
     # Prepare Model
     if par.LOAD_MODEL is True:
-        used_model = mod.UsedModel(par.USED_MODEL_TYPE, arg_load = par.LOAD_MODEL, arg_load_path="../../Models/ModelType.Original_Resnet18_20-11-2021_18-17/ModelType.Original_Resnet18_20-11-2021_18-17Epoch_0100_Acc_48.12.pth",arg_load_device=par.TRAIN_ARCH)
+        used_model = mod.UsedModel(par.USED_MODEL_TYPE, arg_load = par.LOAD_MODEL, arg_load_path="../../Models/ModelType.Original_Resnet18_20-11-2021_18-17/ModelType.Original_Resnet18_20-11-2021_R_21.11.2021_16:28/ModelType.Original_Resnet18_20-11-2021_R_21.11.2021_16:28Epoch_0180_Acc_63.18.pth",arg_load_device=par.TRAIN_ARCH)
         used_model.model.to(trainDevice)
         for param in used_model.optimizer.state.values():  # TODO - need to send loaded optimizer into trainDevice
             # Not sure there are any global tensors in the state dict

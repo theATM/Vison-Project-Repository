@@ -70,7 +70,7 @@ def __testMain():
     #used_model.model.to(test_device)
     used_model.model.eval()
 
-    transform_test = trans.TRANSFORM_DEFAULT
+    transform_test = trans.TRANSFORM_BLANK
 
     image = io.imread(Image_PATH)
     image = transform_test(image)

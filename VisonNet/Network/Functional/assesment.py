@@ -20,7 +20,7 @@ MY_IMAGE_PATH = '../Data/testset/500/63.jpg'
 SHOW_ONLY_NEGATIVE = True #used when assesing many images  - the program would stop only on those predicted wrong
 SCAN_FOR_WORST = True #used to show the worst pedicted picture in dataset
 
-transform_asses = trans.TRANSFORM_DEFAULT
+transform_asses = trans.TRANSFORM_BLANK
 
 
 def main():

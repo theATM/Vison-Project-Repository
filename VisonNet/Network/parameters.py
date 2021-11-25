@@ -94,7 +94,7 @@ if PARAMETERS_PROFILE == ParametersProfileType.ATM:
     # Training Parameters
     MAX_EPOCH_NUMBER = 800
     TRAIN_ARCH = 'cuda:0'  # for cpu type 'cpu', for gpu type 'cuda' to check for gpu enter to command prompt nvidia-smi
-    LOAD_MODEL = True
+    LOAD_MODEL = False
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True  # zysk +2% cuda  (?)
     INITIAl_LEARNING_RATE = 0.01

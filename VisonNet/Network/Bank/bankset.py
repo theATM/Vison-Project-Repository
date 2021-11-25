@@ -84,10 +84,10 @@ def loadData(arg_load_train = True, arg_load_val = True, arg_load_test = True,
         transform_train = trans.TRANSFORM_TRAIN
 
     if arg_trans_val is None and arg_load_val is True:
-        transform_val = trans.TRANSFORM_DEFAULT
+        transform_val = trans.TRANSFORM_BLANK
 
     if arg_trans_test is None and arg_load_test is True:
-        transform_test = trans.TRANSFORM_DEFAULT
+        transform_test = trans.TRANSFORM_BLANK
 
     # Load Data
     trainset = None
