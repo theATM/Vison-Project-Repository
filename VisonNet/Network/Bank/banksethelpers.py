@@ -2,7 +2,7 @@ import torch
 import random
 import torchvision
 from torchvision.transforms import functional
-from PIL import ImageStat
+from PIL import ImageStat, ImageEnhance
 # Uttils Classes
 
 
@@ -141,6 +141,15 @@ class CustomColorJitter(torch.nn.Module): #taken form torchision.transforms
         format_string += ', saturation={0}'.format(self.saturation)
         format_string += ', hue={0})'.format(self.hue)
         return format_string
+
+
+class EnhanceBrightness(object):
+    def __init__(self, bright):
+        self.bright = 2.5
+
+    def __call__(self, img):
+        return ImageEnhance.Brightness(img).enhance(self.bright)
+
 
 
 

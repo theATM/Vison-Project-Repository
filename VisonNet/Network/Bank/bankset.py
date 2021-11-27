@@ -107,24 +107,24 @@ def loadData(arg_load_train = True, arg_load_val = True, arg_load_test = True,
         test_batch_size = par.QUANT_TESTSET_BATCH_SIZE
         test_num_workers = par.QUANT_TESTSET_NUM_WORKERS
     else:
-        train_batch_size = par.DATASET_BATCH_SIZE
-        train_num_workers = par.DATASET_NUM_WORKERS
-        val_batch_size = par.VALSET_BATCH_SIZE
-        val_num_workers = par.VALSET_NUM_WORKERS
-        test_batch_size = par.TESTSET_BATCH_SIZE
-        test_num_workers = par.TESTSET_NUM_WORKERS
+        train_batch_size = par.DATA_DATASET_BATCH_SIZE
+        train_num_workers = par.DATA_DATASET_NUM_WORKERS
+        val_batch_size = par.DATA_VALSET_BATCH_SIZE
+        val_num_workers = par.DATA_VALSET_NUM_WORKERS
+        test_batch_size = par.DATA_TESTSET_BATCH_SIZE
+        test_num_workers = par.DATA_TESTSET_NUM_WORKERS
 
 
     if arg_load_train is True:
-        trainset = Bankset(par.DATASET_PATH, transform_train)
+        trainset = Bankset(par.DATA_DATASET_PATH, transform_train)
         trainloader = DataLoader(trainset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=train_num_workers)
         print("TrainSet",end=' ')
     if arg_load_val is True:
-        valset = Bankset(par.VALSET_PATH, transform_val)
+        valset = Bankset(par.DATA_VALSET_PATH, transform_val)
         valloader = DataLoader(valset, batch_size=val_batch_size, shuffle=False, num_workers=val_num_workers)
         print("ValSet", end=' ')
     if arg_load_test is True:
-        testset = Bankset(par.TESTSET_PATH, transform_test)
+        testset = Bankset(par.DATA_TESTSET_PATH, transform_test)
         testloader = DataLoader(testset, batch_size=test_batch_size, shuffle=False, num_workers=test_num_workers)
         print("TestSet", end=' ')
     if (arg_load_train or  arg_load_val or arg_load_test) is False:

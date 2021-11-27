@@ -13,46 +13,34 @@ from Network.Functional import evaluate as eva
 def main():
 
     # Load Data
-    trainloader, valloader, testloader = bank.loadData(single_batch_test=par.SINGLE_BATCH_TEST)
+    trainloader, valloader, testloader = bank.loadData(single_batch_test=par.DATA_SINGLE_BATCH_TEST_ENABLE)
 
     # Creating devices  - choosing where will training/eval calculate (gpu or cpu)
-    trainDevice = torch.device(par.TRAIN_ARCH)
-    evalDevice = torch.device(par.TRAIN_ARCH)
+    trainDevice = torch.device(par.TRAIN_DEVICE)
+    evalDevice = torch.device(par.TRAIN_DEVICE)
 
     #Empty GPU Cache before Training starts
-    if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
+    if par.TRAIN_DEVICE == 'cuda:0': torch.cuda.empty_cache()
 
     # Prepare Model
-    if par.LOAD_MODEL is True:
-        used_model = mod.UsedModel(par.USED_MODEL_TYPE, arg_load = par.LOAD_MODEL, arg_load_path="../../Models/ModelType.Original_Resnet18_20-11-2021_18-17/ModelType.Original_Resnet18_20-11-2021_R_21.11.2021_16:28/ModelType.Original_Resnet18_20-11-2021_R_21.11.2021_16:28Epoch_0180_Acc_63.18.pth",arg_load_device=par.TRAIN_ARCH)
+    if par.TRAIN_LOAD_MODEL_ENABLE is True:
+        used_model = mod.UsedModel(par.MODEL_USED_MODEL_TYPE, arg_load = par.TRAIN_LOAD_MODEL_ENABLE, arg_load_path=par.MODEL_LOAD_MODEL_PATH, arg_load_device=par.TRAIN_DEVICE)
         used_model.model.to(trainDevice)
-        for param in used_model.optimizer.state.values():  # TODO - need to send loaded optimizer into trainDevice
-            # Not sure there are any global tensors in the state dict
-            if isinstance(param, torch.Tensor):
-                param.data = param.data.to(trainDevice)
-                if param._grad is not None:
-                    param._grad.data = param._grad.data.to(trainDevice)
-            elif isinstance(param, dict):
-                for subparam in param.values():
-                    if isinstance(subparam, torch.Tensor):
-                        subparam.data = subparam.data.to(trainDevice)
-                        if subparam._grad is not None:
-                            subparam._grad.data = subparam._grad.data.to(trainDevice)
+
     else:
-        used_model = mod.UsedModel(par.USED_MODEL_TYPE, arg_pretrained=True)
+        used_model = mod.UsedModel(par.MODEL_USED_MODEL_TYPE, arg_pretrained=True)
         used_model.model.to(trainDevice)
         #used_model.optimizer.to(trainDevice)
 
 
     # Decays the learning rate of each parameter group by gamma once the number of epoch reaches one of the milestones.
-    exp_lr_scheduler = lr_scheduler.MultiStepLR(used_model.optimizer, milestones=[32, 128, 160, 256, 512, 720], gamma=par.SCHEDULER_GAMMA)
+    exp_lr_scheduler = lr_scheduler.MultiStepLR(used_model.optimizer, milestones=[32, 128, 160, 256, 512, 720], gamma=par.TRAIN_SCHEDULER_GAMMA)
 
     best_acc = 0
-
     # Training Network
     print('Training Started')
     #training_start_time = time.time()
-    for nEpoch in range(used_model.start_epoch, par.MAX_EPOCH_NUMBER):
+    for nEpoch in range(used_model.start_epoch, par.TRAIN_MAX_EPOCH_NUMBER):
         print('\n' + 'Epoch ' + str(nEpoch+1) + ':')
         # Training Model
         used_model.model.train()
@@ -62,7 +50,7 @@ def main():
         exp_lr_scheduler.step()
 
         # Evaluate in some epochs:
-        if (nEpoch+1) % par.EVAL_PER_EPOCHS == 0 :
+        if (nEpoch+1) % par.TRAIN_EVAL_PER_EPOCHS == 0 :
             used_model.model.eval()
             mtop1, mtop5 = eva.evaluate(used_model, valloader, evalDevice)
             # Save If Best
@@ -83,7 +71,7 @@ def main():
     #Save If Best #TODO is this really comparable to valset?
     if xtop1.avg > best_acc:
         best_acc = mtop1.avg
-        used_model.saveModel(par.MAX_EPOCH_NUMBER , best_acc)
+        used_model.saveModel(par.TRAIN_MAX_EPOCH_NUMBER, best_acc)
 
 
 def train_one_epoch(used_model, data_loader, trainDevice, nEpoch):
@@ -115,9 +103,9 @@ def train_one_epoch(used_model, data_loader, trainDevice, nEpoch):
             multi_batch_loss += loss;
 
             # Calculate, minding gradient batch accumulation
-            if ((i+1) % par.GRAD_PER_BATCH) == 0:
+            if ((i+1) % par.TRAIN_GRAD_PER_BATCH) == 0:
                 # Normalize loss to account for batch accumulation
-                multi_batch_loss = multi_batch_loss / par.GRAD_PER_BATCH
+                multi_batch_loss = multi_batch_loss / par.TRAIN_GRAD_PER_BATCH
                 #Clipping the gradient
                 clip_grad_norm_(used_model.model.parameters(), max_norm = 1)
                 # Update the weighs
@@ -126,7 +114,7 @@ def train_one_epoch(used_model, data_loader, trainDevice, nEpoch):
                 used_model.optimizer.zero_grad()
 
 
-                if (i+1)  % (par.GRAD_PER_BATCH * 128) == 0 :
+                if (i+1)  % (par.TRAIN_GRAD_PER_BATCH * 128) == 0 :
                     print('Image ' + str(i+1) + ' Current Loss {loss:.3f}'
                           .format(loss=multi_batch_loss.item()))
 

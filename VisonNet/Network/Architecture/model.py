@@ -38,7 +38,7 @@ class UsedModel:
 
         #Create Future Save Path
         if arg_load is False:
-            self.model_path, self.dir_path = self.__generateSaveTemplatePath(par.PATH_PREFIX, par.MODEL_DIR, arg_choose_model)
+            self.model_path, self.dir_path = self.__generateSaveTemplatePath(par.DATA_PATH_PREFIX, par.MODEL_DIR_MODEL, arg_choose_model)
         else:
             self.model_path, self.dir_path = self.__generateSaveTemplatePathForLoad(arg_load_path)
 
@@ -46,7 +46,7 @@ class UsedModel:
         self.__reference_time = current_time #used to differentiate saved models from one training session from another
         self.__model_type = arg_choose_model #.name for string
         self.__model_file_type = par.MODEL_FILE_TYPE
-        self.__model_dir = par.MODEL_DIR
+        self.__model_dir = par.MODEL_DIR_MODEL
         self.__model_saved = False
         self.__model_save_remove_last = arg_remove_last_save
         self.__model_save_epoch = None
@@ -60,8 +60,8 @@ class UsedModel:
             self.model = self.__createCombinedModel(original_model)
             # Create Criterion and Optimizer
             self.criterion = nn.CrossEntropyLoss()
-            self.optimizer = optim.Adam(self.model.parameters(), lr=par.INITIAl_LEARNING_RATE)
-            self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[32, 128, 160, 256, 512, 720], gamma=par.SCHEDULER_GAMMA)
+            self.optimizer = optim.Adam(self.model.parameters(), lr=par.TRAIN_INITIAl_LEARNING_RATE)
+            self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[32, 128, 160, 256, 512, 720], gamma=par.TRAIN_SCHEDULER_GAMMA)
 
         #elif chooseModel == ModelType.My_Resnet18:
         elif arg_choose_model == ModelType.Original_Mobilenet2:
@@ -82,7 +82,7 @@ class UsedModel:
                 self.__loadQuantizedModel(arg_load_path)
             else: # Loading normal (float) model
                 self.__loadModel(arg_load_path, arg_load_device, arg_load_raw=arg_load_raw)
-                self.start_epoch = self.__model_save_epoch
+                self.start_epoch = self.__model_save_epoch + 1 # start form the next epoch
         else:
             print("Model Created")
 
@@ -175,6 +175,20 @@ class UsedModel:
         self.model.load_state_dict(saved_model_states, strict=not arg_partial_load)
         if saved_optim_states != None:
             self.optimizer.load_state_dict(saved_optim_states)
+            #need to send loaded optimizer into load device
+            for param in self.optimizer.state.values():
+                # Not sure there are any global tensors in the state dict
+                if isinstance(param, torch.Tensor):
+                    param.data = param.data.to(arg_load_device)
+                    if param._grad is not None:
+                        param._grad.data = param._grad.data.to(arg_load_device)
+                elif isinstance(param, dict):
+                    for subparam in param.values():
+                        if isinstance(subparam, torch.Tensor):
+                            subparam.data = subparam.data.to(arg_load_device)
+                            if subparam._grad is not None:
+                                subparam._grad.data = subparam._grad.data.to(arg_load_device)
+
         print("Model Loaded")
 
     def __loadQuantizedModel(self, arg_load_path):

@@ -27,8 +27,8 @@ def main():
     print("Welcome to the assessment program")
     print("You can check how the model is doing in action")
 
-    asses_device = torch.device(par.TRAIN_ARCH)
-    if par.TRAIN_ARCH == 'cuda:0': torch.cuda.empty_cache()
+    asses_device = torch.device(par.TRAIN_DEVICE)
+    if par.TRAIN_DEVICE == 'cuda:0': torch.cuda.empty_cache()
     # Load Model
     used_model = mod.UsedModel('Original_Resnet18', arg_load_path=MODEL_PATH, arg_load=True)
     # Choose what to do

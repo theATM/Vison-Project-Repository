@@ -46,8 +46,8 @@ def quantMain():
                                          arg_trans_train=transform_for_quant, quantisation_mode=True)
 
     #Load Our Model
-    quant_model = mod.UsedModel(par.USED_MODEL_TYPE, arg_load=True, arg_load_path=par.QUANT_MODEL_PATH, arg_load_device=par.QUANT_DEVICE,arg_load_raw=par.LOAD_RAW_MODEL)
-    quant_model.optimizer = torch.optim.Adam(quant_model.model.parameters(), lr=par.INITIAl_LEARNING_RATE) ##only if raw load
+    quant_model = mod.UsedModel(par.MODEL_USED_MODEL_TYPE, arg_load=True, arg_load_path=par.QUANT_MODEL_PATH, arg_load_device=par.QUANT_DEVICE, arg_load_raw=par.DATA_LOAD_RAW_MODEL_ENABLE)
+    quant_model.optimizer = torch.optim.Adam(quant_model.model.parameters(), lr=par.TRAIN_INITIAl_LEARNING_RATE) ##only if raw load
     quant_model.model.to(par.QUANT_DEVICE)
     print('Loaded trained model')
 
