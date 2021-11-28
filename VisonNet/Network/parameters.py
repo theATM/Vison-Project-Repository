@@ -195,15 +195,16 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM_MOBILENET:
     ####################################################
 
     # Training Parameters
-    __train_max_epoch_number = 800
+    __train_max_epoch_number = 400
     __train_device = 'cuda:0'  # for cpu type 'cpu', for gpu type 'cuda' to check for gpu enter to command prompt nvidia-smi
     __train_load_model_enable: bool = False
     __train_cudnn_enable = True
     __train_cudnn_benchmark_enable = True  # zysk +2% cuda  (?)
-    __train_initial_learning_rate = 0.01
-    __train_scheduler_gamma = 0.8
+    __train_initial_learning_rate = 0.015
+    __train_scheduler_gamma = 0.1
     __train_eval_per_epochs = 20
     __train_grad_per_batch = 4
+    __train_milestones = [80, 160, 240, 300]
 
     ####################################################
 
@@ -248,6 +249,7 @@ TRAIN_INITIAl_LEARNING_RATE : float = __train_initial_learning_rate
 TRAIN_SCHEDULER_GAMMA : float = __train_scheduler_gamma
 TRAIN_EVAL_PER_EPOCHS : int = __train_eval_per_epochs
 TRAIN_GRAD_PER_BATCH : int = __train_grad_per_batch
+TRAIN_MILESTONES = __train_milestones
 
 ####################################################
 
@@ -262,7 +264,7 @@ DATA_DATASET_BATCH_SIZE : int = __data_dataset_batch_size
 DATA_VALSET_BATCH_SIZE : int = __data_valset_batch_size
 DATA_TESTSET_BATCH_SIZE : int = __data_testset_batch_size
 
-DATA_DATASET_NUM_WORKERS : int = __quant_dataset_num_workers
+DATA_DATASET_NUM_WORKERS : int = __data_dataset_num_workers
 DATA_VALSET_NUM_WORKERS : int = __data_valset_num_workers
 DATA_TESTSET_NUM_WORKERS : int = __data_testset_num_workers
 

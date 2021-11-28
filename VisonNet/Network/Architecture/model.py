@@ -70,7 +70,7 @@ class UsedModel:
             # Create Criterion and Optimizer
             self.criterion = nn.CrossEntropyLoss()
             self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
-            self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[25, 60, 70, 80], gamma=0.1)
+            self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=par.TRAIN_MILESTONES, gamma=par.TRAIN_SCHEDULER_GAMMA)
 
         else:
             print("Chosen Model Not Supported")
