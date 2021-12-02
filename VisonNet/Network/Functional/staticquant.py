@@ -61,7 +61,7 @@ def quantMain():
     if DO_EVALUATE:
         print("Started Evaluation")
         quant_model.model.eval()
-        top1, top5 = eva.evaluate(quant_model, dataset_loader, par.QUANT_DEVICE)
+        top1, top5,_ = eva.evaluate(quant_model, dataset_loader, par.QUANT_DEVICE)
         print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
 
 
@@ -94,7 +94,7 @@ def quantMain():
     if DO_EVALUATE:
         print("Started Evaluation")
         quant_model.model.eval()
-        top1, top5 = eva.evaluate(quant_model, dataset_loader, par.QUANT_DEVICE)
+        top1, top5,_ = eva.evaluate(quant_model, dataset_loader, par.QUANT_DEVICE)
         print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
 
 

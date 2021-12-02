@@ -143,12 +143,24 @@ class CustomColorJitter(torch.nn.Module): #taken form torchision.transforms
         return format_string
 
 
-class EnhanceBrightness(object):
-    def __init__(self, bright):
-        self.bright = 2.5
+class EnhanceBrightness(object): #Karol's work
+    '''This is custom transform class
+        It creates bright circle in the center of image
+        when initializing you can set
+        brightness - float value determine how bright would be product image
+        probability - float value (0,1> determines the logically of preforming the transformation
+        when you call it for specific picture it performs call method. Original design Karol'''
+
+    def __init__(self, bright :float = 2.5, probability : float = 1.0):
+        self.bright : float = bright
+        self.probability : float =  probability #should be inside (0,1>
 
     def __call__(self, img):
-        return ImageEnhance.Brightness(img).enhance(self.bright)
+        fate = random.random() #rand number from (0,1>
+        if fate <= self.probability:
+            return ImageEnhance.Brightness(img).enhance(self.bright)
+        else:
+            return img # do nothing
 
 
 

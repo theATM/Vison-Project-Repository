@@ -24,10 +24,10 @@ def main():
     used_model.model.to(eval_device)
 
     #Eval
-    print("Evaluation Started")
+    print("\nEvaluation Started")
     print("Using Testset")
     used_model.model.eval()
-    model_accuracy, _ = evaluate(used_model, testloader, eval_device)
+    model_accuracy, _,_ = evaluate(used_model, testloader, eval_device)
     print('Evaluation Accuracy on all test images, %2.2f' % (model_accuracy.avg))
     print("Evaluation Finished")
 
@@ -50,7 +50,8 @@ def evaluate(used_model, data_loader, device):
             top3.update(acc5[0], inputs.size(0))
             avg_loss.update(loss,inputs.size(0))
 
-    return top1, top3
+    return top1, top3, avg_loss
+
 
 def accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""

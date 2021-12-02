@@ -54,22 +54,32 @@ class UsedModel:
         self.__model_save_loss = None
 
         if arg_choose_model == ModelType.Original_Resnet18:
-            print("Chosen Resnet18")
+            print("Chosen Model - Resnet18")
             # Prepare Model from Resnet
             original_model = originalModels.resnet18(pretrained=arg_pretrained, progress=True, quantize=False) #TODO pytania koamila?
+            print(f"Model Pretrained = {arg_pretrained}")
             self.model = self.__createCombinedModel(original_model)
             # Create Criterion and Optimizer
+            print("Chosen Criterion - CrossEntropyLoss")
             self.criterion = nn.CrossEntropyLoss()
+            print("Chosen Optimizer - Adam")
             self.optimizer = optim.Adam(self.model.parameters(), lr=par.TRAIN_INITIAl_LEARNING_RATE)
-            self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=[32, 128, 160, 256, 512, 720], gamma=par.TRAIN_SCHEDULER_GAMMA)
+            # Decays the learning rate of each parameter group by gamma once the number of epoch reaches one of the milestones.
+            print("Chosen Scheduler - MultiStepLR")
+            self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=par.TRAIN_MILESTONES, gamma=par.TRAIN_SCHEDULER_GAMMA)
 
         #elif chooseModel == ModelType.My_Resnet18:
         elif arg_choose_model == ModelType.Original_Mobilenet2:
             # Prepare Model from MobileNet
+            print("Chosen Model - MobilenetV2")
             self.model = mobilenet.MobileNetV2(num_classes=7)
             # Create Criterion and Optimizer
+            print("Chosen Criterion - CrossEntropyLoss")
             self.criterion = nn.CrossEntropyLoss()
+            print("Chosen Optimizer - Adam")
             self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+            # Decays the learning rate of each parameter group by gamma once the number of epoch reaches one of the milestones.
+            print("Chosen Scheduler - MultiStepLR")
             self.scheduler = lr_scheduler.MultiStepLR(self.optimizer, milestones=par.TRAIN_MILESTONES, gamma=par.TRAIN_SCHEDULER_GAMMA)
 
         else:
@@ -78,6 +88,7 @@ class UsedModel:
 
         #Load Model
         if arg_load is True:
+            print(f"Loaded Model from: {arg_load_path}")
             if arg_load_quantized is True: # Loading quantized model
                 self.__loadQuantizedModel(arg_load_path)
             else: # Loading normal (float) model
@@ -89,6 +100,7 @@ class UsedModel:
 
     @staticmethod
     def __createCombinedModel(arg_model_fe):
+        #This is for Resnet18 only!
         model_fe_features = nn.Sequential(
             arg_model_fe.conv1,
             arg_model_fe.bn1,
@@ -102,7 +114,7 @@ class UsedModel:
 
         new_head = nn.Sequential(
             nn.Dropout(p=0.6),
-            nn.Linear(256, 7),
+            nn.Linear(256, 7), #last layer
         )
 
         new_model = nn.Sequential(
@@ -121,9 +133,9 @@ class UsedModel:
         now = datetime.now()  # Used to differentiate saved models
         now_str = now.strftime("%d-%m-%Y_%H-%M")
         #Dir for all newly saved models
-        save_dir_path= arg_path_prefix + '/' + arg_model_dir + '/' + str(arg_model_name) + '_' + now_str
+        save_dir_path= arg_path_prefix + '/' + arg_model_dir + '/' + str(arg_model_name.name) + '_' + now_str
         #Saced model template path
-        save_template_path = save_dir_path + '/' + str(arg_model_name) + '_' + now_str
+        save_template_path = save_dir_path + '/' + str(arg_model_name.name) + '_' + now_str
         return save_template_path, save_dir_path
 
     @staticmethod
@@ -202,7 +214,7 @@ class UsedModel:
         self.model = torch.jit.load(arg_load_path)
         print("Model Loaded")
 
-    def saveModel(self, arg_epoch=None, arg_acc=None, arg_loss=None):
+    def saveModel(self, arg_epoch=None, arg_acc=None, arg_loss=None,arg_last=False):
         """ Saves Model to File while training, can remove last save too (from the same model) """
 
         #Create Savable copy of model
@@ -245,11 +257,12 @@ class UsedModel:
                 'accuracy': self.__model_save_acc,
                 'loss': self.__model_save_loss,
                 'optimizer': saved_optim_states,
-                'model': saved_model_states
+                'model': saved_model_states,
+                'modelType': self.__model_type
             }
 
         # Save Current Model
-        model_save_path = self.getSavedModelPath()
+        model_save_path = self.getSavedModelPath(arg_last)
         torch.save(model_save_dict, model_save_path)
         self.__model_saved = True  # set as saved
         print("Saved Current Model on Epoch " + str(self.__model_save_epoch + 1))
@@ -267,9 +280,10 @@ class UsedModel:
 
 
 
-    def getSavedModelPath(self):
+    def getSavedModelPath(self,arg_last=False):
         """ It constructs full model save path, by adding current training epoch and model accuracy to it. Atm"""
         return str(self.model_path) \
+               + ('Last_' if arg_last else "")\
                + 'Epoch_' + str('%04d' % (self.__model_save_epoch+1)) \
                + '_Acc_' + str('%.2f' % self.__model_save_acc) \
                + str(self.__model_file_type)

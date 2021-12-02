@@ -21,7 +21,7 @@ class ParametersProfileType(Enum):
 
 
 # Change to your profile
-PARAMETERS_PROFILE = ParametersProfileType.ATM_MOBILENET
+PARAMETERS_PROFILE = ParametersProfileType.ATM
 #PARAMETERS_PROFILE = ParametersProfileType.POKISIEK
 
 # Check if profile is properly set up
@@ -113,32 +113,34 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM:
     __data_testset_num_workers = 2
 
 
-    __data_single_batch_test_enable :bool = False # Will run the model with only one batch to see if it works properly
+    __data_single_batch_test_enable :bool = False # Will run the model with only one batch to see if it works properly - must set train_grad_per_batch to 1
 
     ####################################################
 
     # Model Parameters
-
+    __model_path_prefix = "../.."
     __model_dir_name = 'Models'
     __model_file_type = '.pth' # Model Presumed extension
-    __model_additional_dirs = ""
-    __model_load_name = 'Original_Mobilenet2_23-10-2021_16-38_Epoch_0004_Acc_20.07.pth'
+    __model_additional_dirs = "Original_Resnet18_01-12-2021_21-05"
+    __model_load_name = 'Original_Resnet18_01-12-2021_21-05Epoch_0080_Acc_96.86ModelType.Original_Resnet18.pth'
     __model_load_raw_model_enable :bool = False
-    __model_used_model_type = modtype.ModelType.Original_Mobilenet2
+    __model_used_model_type = modtype.ModelType.Original_Resnet18
 
 
     ####################################################
 
     # Training Parameters
-    __train_max_epoch_number = 800
+    __train_max_epoch_number = 240 #800
     __train_device = 'cuda:0'  # for cpu type 'cpu', for gpu type 'cuda' to check for gpu enter to command prompt nvidia-smi
     __train_load_model_enable :bool = False
     __train_cudnn_enable = True
     __train_cudnn_benchmark_enable = True  # zysk +2% cuda  (?)
-    __train_initial_learning_rate = 0.01
-    __train_scheduler_gamma = 0.8
+    __train_initial_learning_rate = 0.001 #must be min 0.00(..)
+    __train_scheduler_gamma = 0.5 #0.2
     __train_eval_per_epochs = 20
     __train_grad_per_batch = 4
+    __train_print_per_batch = 256
+    __train_milestones = [60, 120, 180]#[60, 120, 200, 400]#[32, 128, 160, 256, 512, 720]
 
 
     ####################################################
@@ -204,6 +206,7 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM_MOBILENET:
     __train_scheduler_gamma = 0.1
     __train_eval_per_epochs = 20
     __train_grad_per_batch = 4
+    __train_print_per_batch = 128
     __train_milestones = [80, 160, 240, 300]
 
     ####################################################
@@ -230,7 +233,7 @@ else: #None Init
     , __data_testset_batch_size, __data_dataset_num_workers, __data_valset_num_workers, __data_testset_num_workers, __data_single_batch_test_enable \
     , __model_dir_name, __model_file_type,__model_additional_dirs, __model_load_name, __model_load_raw_model_enable, __model_used_model_type, __train_max_epoch_number \
     , __train_device, __train_load_model_enable, __train_cudnn_enable, __train_cudnn_benchmark_enable, __train_initial_learning_rate, __train_scheduler_gamma \
-    , __train_eval_per_epochs, __train_grad_per_batch, __quant_model_indir_name, __quant_model_outdir_name, __quant_model_name, __quant_save_model_name \
+    , __train_eval_per_epochs, __train_grad_per_batch, __train_print_per_batch , __quant_model_indir_name, __quant_model_outdir_name, __quant_model_name, __quant_save_model_name \
     , __quant_device, __quant_eval_enable, __quant_dataset_batch_size, __quant_valset_batch_size, __quant_testset_batch_size, __quant_dataset_num_workers \
     , __quant_valset_num_workers, __quant_testset_num_workers, __eval_load_model_is_quantized = None
 
@@ -249,6 +252,7 @@ TRAIN_INITIAl_LEARNING_RATE : float = __train_initial_learning_rate
 TRAIN_SCHEDULER_GAMMA : float = __train_scheduler_gamma
 TRAIN_EVAL_PER_EPOCHS : int = __train_eval_per_epochs
 TRAIN_GRAD_PER_BATCH : int = __train_grad_per_batch
+TRAIN_PRINT_PER_BATCH :int =  __train_print_per_batch
 TRAIN_MILESTONES = __train_milestones
 
 ####################################################
@@ -276,8 +280,8 @@ DATA_SINGLE_BATCH_TEST_ENABLE : bool = __data_single_batch_test_enable  # Will r
 # Model Parameters
 
 MODEL_DIR_MODEL : str = __model_dir_name
-MODEL_FILE_TYPE : str = __model_used_model_type  # Model Presumed extension
-MODEL_LOAD_MODEL_PATH :str = __model_path_prefix + '/' + __model_dir_name + '/' + __model_additional_dirs +  __model_load_name
+MODEL_FILE_TYPE : str = __model_file_type  # Model Presumed extension
+MODEL_LOAD_MODEL_PATH :str = __model_path_prefix + '/' + __model_dir_name + '/' + (__model_additional_dirs+"/" if __model_additional_dirs != "" else "") +  __model_load_name
 MODEL_USED_MODEL_TYPE : modtype.ModelType = __model_used_model_type
 
 

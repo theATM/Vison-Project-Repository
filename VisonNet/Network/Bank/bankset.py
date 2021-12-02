@@ -45,11 +45,14 @@ class Bankset(Dataset):
         # Load Images
         for root_dir in root_dirs:
             #Check for subdirs
-            for sub_dir in bsu.listSubdirsIfPresent(root_dir):
+            for sub_dir in bsu.listSubdirsIfPresent(root_dir,True):
+                print(sub_dir.split("/")[-1], end=":\n{\n")
                 for value in classes:
-                    tmp = map(lambda x: {'class': value, 'image': x}, bsu.listFilesInDir(f"{sub_dir}/{value}/"))
+                    print(" {",end="\n  ")
+                    tmp = map(lambda x: {'class': value, 'image': x}, bsu.listFilesInDir(f"{sub_dir}/{value}/",True))
+                    print("\n },",end="\n")
                     self.images.extend(tmp)
-
+                print("}")
         random.shuffle(self.images)
         self.transform = transform
 
@@ -96,7 +99,7 @@ def loadData(arg_load_train = True, arg_load_val = True, arg_load_test = True,
     trainloader = None
     valloader = None
     testloader = None
-    print("Loaded",end=' ')
+
 
 
     if quantisation_mode is True:
@@ -114,19 +117,22 @@ def loadData(arg_load_train = True, arg_load_val = True, arg_load_test = True,
         test_batch_size = par.DATA_TESTSET_BATCH_SIZE
         test_num_workers = par.DATA_TESTSET_NUM_WORKERS
 
-
+    print("Loaded", end=':\n')
     if arg_load_train is True:
+        print("Trainset", end=' ')
         trainset = Bankset(par.DATA_DATASET_PATH, transform_train)
         trainloader = DataLoader(trainset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=train_num_workers)
-        print("TrainSet",end=' ')
+        print(end='\n')
     if arg_load_val is True:
+        print("Valset", end=' ')
         valset = Bankset(par.DATA_VALSET_PATH, transform_val)
         valloader = DataLoader(valset, batch_size=val_batch_size, shuffle=False, num_workers=val_num_workers)
-        print("ValSet", end=' ')
+        print(end='\n')
     if arg_load_test is True:
+        print("Testset", end=' ')
         testset = Bankset(par.DATA_TESTSET_PATH, transform_test)
         testloader = DataLoader(testset, batch_size=test_batch_size, shuffle=False, num_workers=test_num_workers)
-        print("TestSet", end=' ')
+        print(end='\n')
     if (arg_load_train or  arg_load_val or arg_load_test) is False:
         print("No Data")
         return

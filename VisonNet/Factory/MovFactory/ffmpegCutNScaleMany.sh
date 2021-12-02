@@ -1,5 +1,5 @@
 #!/bin/bash
-#this script cuts video into frames - images (if video is in 30fps) and resizes them to 640:480p
+#this script cuts video into frames - images (if video is in 30fps) and resizes them to 244:244p
 #To make it work:
 #Script must be (in default case) inside this specific structure:
 # Main Dir
@@ -16,7 +16,7 @@
 INPUT_DIR="waiting"
 OUTPUT_FOLDER="extracted"
 echo "This script creates img from all mp4 in waiting folder"
-echo "They are also scaled to 640:480p"
+echo "They are also scaled to 244:244p"
 
 
 for video in $INPUT_DIR/*
