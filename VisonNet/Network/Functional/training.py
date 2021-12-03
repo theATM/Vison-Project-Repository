@@ -74,7 +74,7 @@ def main():
     print("\nTraining concluded\n")
     #Post Training Evaluation
     used_model.model.eval()
-    mtop1, mtop3, mloss = eva.evaluate(used_model, testloader, evalDevice)
+    mtop1, mtop3, mloss = eva.evaluate(used_model, valloader, evalDevice)
     print("Evaluation on validation set")
     print('Evaluation accuracy at the end on all validation images, %2.2f' % mtop1.avg)
     print('Top 3 at the end on all validation images, %2.2f' % mtop3.avg)

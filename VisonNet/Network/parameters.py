@@ -121,8 +121,8 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM:
     __model_path_prefix = "../.."
     __model_dir_name = 'Models'
     __model_file_type = '.pth' # Model Presumed extension
-    __model_additional_dirs = "Original_Resnet18_01-12-2021_21-05"
-    __model_load_name = 'Original_Resnet18_01-12-2021_21-05Epoch_0080_Acc_96.86ModelType.Original_Resnet18.pth'
+    __model_additional_dirs = "Original_Resnet18_02-12-2021_04-02"
+    __model_load_name = 'Original_Resnet18_02-12-2021_04-02Epoch_0140_Acc_93.29.pth'
     __model_load_raw_model_enable :bool = False
     __model_used_model_type = modtype.ModelType.Original_Resnet18
 
@@ -136,7 +136,7 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM:
     __train_cudnn_enable = True
     __train_cudnn_benchmark_enable = True  # zysk +2% cuda  (?)
     __train_initial_learning_rate = 0.001 #must be min 0.00(..)
-    __train_scheduler_gamma = 0.5 #0.2
+    __train_scheduler_gamma = 0.8 #0.5 #0.2
     __train_eval_per_epochs = 20
     __train_grad_per_batch = 4
     __train_print_per_batch = 256
