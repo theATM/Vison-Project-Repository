@@ -157,9 +157,10 @@ public class MainActivity extends FlutterActivity {
                 max = scores[i];
                 maxInd = i;
             }
-            else if (max == scores[i])
+            else if (max == scores[i] || prev < scores[i])
             {
                 //Prevents from predictiong form  for ex. [1,1,1,1,1,..]
+                //or when this is the second bigggest
                 prev = scores[i];
                 prevInd = i;
             }
