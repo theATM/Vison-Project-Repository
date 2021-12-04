@@ -13,15 +13,20 @@ import Network.Bank.bankset as bank
 import Network.Bank.transforms as trans
 import Network.parameters as par
 import Network.Architecture.model as mod
+import Network.Architecture.modeltype as modtype
 
-
-MODEL_PATH = '../Models/resnetTa94pretrained.pth'
-MY_IMAGE_PATH = '../Data/testset/500/63.jpg'
+MODEL_PATH =  '../../Models/Original_Resnet18_02-12-2021_20-43/Quant_Original_Resnet18_02-12-2021_20-43Last_Epoch_0241_Acc_81.95.pt'
+MY_IMAGE_PATH = "/home/olek/Desktop/LasTest/20211204_190935.jpg"
+ #"/home/olek/Pictures/VisonData/TrainingData/TrainDataStorage/100/atmImg100/atmImg100_Normal/20210923_220318c.jpg"
+#"/home/olek/Desktop/LasTest/20211204_190935.jpg"
+#"/home/olek/Desktop/LasTest/20211204_154215.jpg"
+#'../Data/testset/500/63.jpg'
 SHOW_ONLY_NEGATIVE = True #used when assesing many images  - the program would stop only on those predicted wrong
 SCAN_FOR_WORST = True #used to show the worst pedicted picture in dataset
-
+MODEL_TYPE = modtype.ModelType.Original_Resnet18
 transform_asses = trans.TRANSFORM_BLANK
-
+LOAD_DEVICE = par.TRAIN_DEVICE
+LOAD_QUANTIZED = True
 
 def main():
     print("Welcome to the assessment program")
@@ -30,7 +35,8 @@ def main():
     asses_device = torch.device(par.TRAIN_DEVICE)
     if par.TRAIN_DEVICE == 'cuda:0': torch.cuda.empty_cache()
     # Load Model
-    used_model = mod.UsedModel('Original_Resnet18', arg_load_path=MODEL_PATH, arg_load=True)
+    used_model = mod.UsedModel(MODEL_TYPE, arg_load_path=MODEL_PATH, arg_load=True,arg_load_device=LOAD_DEVICE,arg_load_quantized=LOAD_QUANTIZED)
+
     # Choose what to do
     user_choice = mainMenu()
 

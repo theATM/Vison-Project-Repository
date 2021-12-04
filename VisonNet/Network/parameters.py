@@ -121,8 +121,8 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM:
     __model_path_prefix = "../.."
     __model_dir_name = 'Models'
     __model_file_type = '.pth' # Model Presumed extension
-    __model_additional_dirs = "Original_Resnet18_02-12-2021_04-02"
-    __model_load_name = 'Original_Resnet18_02-12-2021_04-02Epoch_0140_Acc_93.29.pth'
+    __model_additional_dirs = "Original_Resnet18_02-12-2021_20-43"
+    __model_load_name = 'Quant_Original_Resnet18_02-12-2021_20-43Last_Epoch_0241_Acc_81.95.pt'
     __model_load_raw_model_enable :bool = False
     __model_used_model_type = modtype.ModelType.Original_Resnet18
 
@@ -138,9 +138,9 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM:
     __train_initial_learning_rate = 0.001 #must be min 0.00(..)
     __train_scheduler_gamma = 0.8 #0.5 #0.2
     __train_eval_per_epochs = 20
-    __train_grad_per_batch = 4
+    __train_grad_per_batch = 8
     __train_print_per_batch = 256
-    __train_milestones = [60, 120, 180]#[60, 120, 200, 400]#[32, 128, 160, 256, 512, 720]
+    __train_milestones = [80, 120, 180]#[60, 120, 200, 400]#[32, 128, 160, 256, 512, 720]
 
 
     ####################################################
@@ -148,8 +148,8 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM:
     # Quantisation Parameters
     __quant_model_indir_name = "Quantin"
     __quant_model_outdir_name = "Quantout"
-    __quant_model_name = 'Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68_rs.pth'
-    __quant_save_model_name =  'ResQuant84First.pt'
+    __quant_model_name = 'Original_Resnet18_04-12-2021_00-22_Last__Epoch_0241_Acc_92.67.pth'
+    __quant_save_model_name =  'FourthGood240ResQuant92.pt'
     __quant_device = 'cpu'
     __quant_eval_enable = False
     __quant_dataset_batch_size = 4
@@ -159,7 +159,7 @@ elif PARAMETERS_PROFILE == ParametersProfileType.ATM:
     __quant_valset_num_workers = 0
     __quant_testset_num_workers = 0
     #Eval
-    __eval_load_model_is_quantized = False
+    __eval_load_model_is_quantized = True
 
 
 ########################################################################################################################
@@ -292,7 +292,7 @@ QUANT_MODEL_INDIR : str = __quant_model_indir_name
 QUANT_MODEL_OUTDIR : str = __quant_model_outdir_name
 
 QUANT_MODEL_PATH : str = __model_path_prefix + '/' + __model_dir_name + '/' + __quant_model_indir_name + '/' + __quant_model_name
-QUANT_SAVE_MODEL_PATH : str = __model_path_prefix + '/' + __model_dir_name + '/' + __quant_model_outdir_name + '/' + __quant_model_name
+QUANT_SAVE_MODEL_PATH : str = __model_path_prefix + '/' + __model_dir_name + '/' + __quant_model_outdir_name + '/' + __quant_save_model_name
 
 
 QUANT_DEVICE : str = __quant_device

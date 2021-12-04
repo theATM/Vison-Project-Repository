@@ -283,8 +283,8 @@ class UsedModel:
     def getSavedModelPath(self,arg_last=False):
         """ It constructs full model save path, by adding current training epoch and model accuracy to it. Atm"""
         return str(self.model_path) \
-               + ('Last_' if arg_last else "")\
-               + 'Epoch_' + str('%04d' % (self.__model_save_epoch+1)) \
+               + ('_Last_' if arg_last else "")\
+               + '_Epoch_' + str('%04d' % (self.__model_save_epoch+1)) \
                + '_Acc_' + str('%.2f' % self.__model_save_acc) \
                + str(self.__model_file_type)
 

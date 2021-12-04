@@ -13,7 +13,7 @@
 #After edit you need to change cloasing character
 #Use "sed -i -e 's/\r$//' scriptname.sh" inside docker machine
 #And then run the script
-
+#You may have to send your waiting files to directory first
 #Into:
 #First some variables:
 INPUT_DIR="waiting"

@@ -134,7 +134,7 @@ def train_one_epoch(used_model, data_loader, trainDevice, nEpoch):
 
 
                 if (i+1)  % (par.TRAIN_GRAD_PER_BATCH * par.TRAIN_PRINT_PER_BATCH) == 0 :
-                    print('Image ' + str(i+1) + ' Current Loss {loss:.3f}'
+                    print('Batch ' + str(i+1) + ' Current Loss {loss:.3f}'
                           .format(loss=multi_batch_loss.item()))
 
                 multi_batch_loss = 0.0
