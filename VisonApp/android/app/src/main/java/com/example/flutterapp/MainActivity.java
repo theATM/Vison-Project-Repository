@@ -23,7 +23,7 @@ import java.util.HashMap;
 import android.os.Bundle;
 
 public class MainActivity extends FlutterActivity {
-    private static final boolean isDebug = false; 
+    private static final boolean isDebug = true;
     private static final String CHANNEL = "samples.flutter.dev/battery";
     private static FlutterEngine _flutterEngine;
     private static final LinkedBlockingQueue<Runnable> neuralNetFrameQueue = new LinkedBlockingQueue<Runnable>(1);
@@ -47,7 +47,7 @@ public class MainActivity extends FlutterActivity {
         // Here the Pretrained Neural Network Selection:
         // ORIGINAL : resnet_18_acc94_29.pt
         // BEST : resnet_18_acc94_29.pt
-        module = getModel("resnet_18_acc94_29.pt");
+        module = getModel("FourthGood240ResQuant92.pt");
         //module = getModel("rn18quantized20atm.pt");
     }
 
@@ -146,18 +146,45 @@ public class MainActivity extends FlutterActivity {
 
         int maxInd = -1;
         float max = -999999.0f;
-        for (int i = 0; i < scores.length; i++) {
-            if (max < scores[i]) {
+        int prevInd = -1;
+        float prev = -999999.0f;
+        for (int i = 0; i < scores.length; i++)
+        {
+            if (max < scores[i])
+            {
+                prev = max;
+                prevInd = maxInd;
                 max = scores[i];
                 maxInd = i;
             }
-            if(isDebug) {
+            else if (max == scores[i])
+            {
+                //Prevents from predictiong form  for ex. [1,1,1,1,1,..]
+                prev = scores[i];
+                prevInd = i;
+            }
+
+            if(isDebug)
+            {
                 Log.d("SCORES", String.format("Class: %d -----  %f", i, scores[i]));
             }
         }
-        if(isDebug) {
+        if(isDebug)
+        {
             Log.d("Prediction", String.format("Class: %d -----  %f", maxInd, scores[maxInd]));
         }
+        //Prediction Logic - 0.75 is arbitrary, max < 0.0 is arbitrary too
+        if( (max - prev) < 0.75  || max < 0.0 )
+        {
+            ///Netowrk is not sure!
+            max = scores[6];
+            maxInd = 6; //set class as NONE
+            if(isDebug)
+            {
+                Log.d("WRONG", "Network is not sure!");
+            }
+        }
+
         return maxInd;
     }
 
