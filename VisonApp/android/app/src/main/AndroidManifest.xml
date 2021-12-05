@@ -13,7 +13,7 @@
     <uses-feature android:name="android.hardware.camera" />
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="VisApp"
+        android:label="VisonApp"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name="com.example.flutterapp.MainActivity"
