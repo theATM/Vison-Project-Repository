@@ -10,7 +10,7 @@ import Network.Architecture.model as mod
 
 def main():
     #Load Data
-    testloader , _,_  = bank.loadData(arg_load_train=False,arg_load_val=True,arg_load_test=False)
+    _ , testloader,_  = bank.loadData(arg_load_train=False,arg_load_val=True,arg_load_test=False)
 
     #Define Eval Device
     eval_device = par.QUANT_DEVICE if par.EVAL_LOAD_MODEL_IS_QUANTIZED else par.TRAIN_DEVICE

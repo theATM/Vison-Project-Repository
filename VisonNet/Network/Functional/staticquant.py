@@ -42,7 +42,7 @@ def quantMain():
     #TODO: transforms
     transform_for_quant = trans.TRANSFORM_QUANTIZE
 
-    dataset_loader, _, _ = bank.loadData(arg_load_train=True, arg_load_val=False, arg_load_test=False,
+    dataset_loader, valset_loader, _ = bank.loadData(arg_load_train=True, arg_load_val=True, arg_load_test=False,
                                          arg_trans_train=transform_for_quant, quantisation_mode=True)
 
     #Load Our Model
@@ -61,8 +61,8 @@ def quantMain():
     if DO_EVALUATE:
         print("Started Evaluation")
         quant_model.model.eval()
-        top1, top5,_ = eva.evaluate(quant_model, dataset_loader, par.QUANT_DEVICE)
-        print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
+        top1, _,_ = eva.evaluate(quant_model, valset_loader, par.QUANT_DEVICE)
+        print('Evaluation accuracy on all val images, %2.2f' % (top1.avg))
 
 
     propagation_list = quant.get_default_qconfig_propagation_list()
@@ -94,8 +94,8 @@ def quantMain():
     if DO_EVALUATE:
         print("Started Evaluation")
         quant_model.model.eval()
-        top1, top5,_ = eva.evaluate(quant_model, dataset_loader, par.QUANT_DEVICE)
-        print('Evaluation accuracy on all test images, %2.2f' % (top1.avg))
+        top1, _,_ = eva.evaluate(quant_model, valset_loader, par.QUANT_DEVICE)
+        print('Evaluation accuracy on all val images, %2.2f' % (top1.avg))
 
 
     # save for mobile

@@ -119,16 +119,25 @@ def loadData(arg_load_train = True, arg_load_val = True, arg_load_test = True,
 
     print("Loaded", end=':\n')
     if arg_load_train is True:
+        print("Trainset")
+        print("Trainset batch size "+ str(train_batch_size))
+        print("Trainset workers "+ str(train_num_workers))
         print("Trainset", end=' ')
         trainset = Bankset(par.DATA_DATASET_PATH, transform_train)
         trainloader = DataLoader(trainset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=train_num_workers)
         print(end='\n')
     if arg_load_val is True:
+        print("Valset")
+        print("Valset batch size "+ str(val_batch_size))
+        print("Valset workers "+ str(val_num_workers))
         print("Valset", end=' ')
         valset = Bankset(par.DATA_VALSET_PATH, transform_val)
         valloader = DataLoader(valset, batch_size=val_batch_size, shuffle=False, num_workers=val_num_workers)
         print(end='\n')
     if arg_load_test is True:
+        print("Testset")
+        print("Testset batch size "+ str(test_batch_size))
+        print("Testset workers "+ str(test_num_workers))
         print("Testset", end=' ')
         testset = Bankset(par.DATA_TESTSET_PATH, transform_test)
         testloader = DataLoader(testset, batch_size=test_batch_size, shuffle=False, num_workers=test_num_workers)
