@@ -3,10 +3,12 @@ import 'dart:core';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
-import 'package:soundpool/soundpool.dart';
 import 'package:flutter_flashlight/flutter_flashlight.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock/wakelock.dart';
 
 
 
@@ -20,7 +22,7 @@ Future<void> main() async {
   final cameras = await availableCameras();
 
   // Get a specific camera from the list of available cameras.
-  final firstCamera = cameras.first;
+  final firstCamera = cameras[0];
   runApp(
     MaterialApp(
       theme: ThemeData.dark(),
@@ -46,61 +48,56 @@ class TakePictureScreen extends StatefulWidget {
 }
 
 class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindingObserver {
-  AppLifecycleState _lastLifecycleState = null;
   bool isTapped = false;
+  bool cameraPermission = false;
   CameraController _controller;
-  Soundpool soundpool;
   String error;
   Future<void> _initializeControllerFuture;
-  int frames = 0;
   static const platform = const MethodChannel('samples.flutter.dev/battery');
-  int frameCounter = 0;
   int _prediction = 0;
-  int _iter = 0;
   bool busy = false;
+  bool alreadyChecked = false;
   // displaying values
-
+  List<String> announcements = ["10 PLN", "20 PLN", "50 PLN", "100 PLN", "200 PLN", "500 PLN", ""];
+  List<String> announcMore = [
+    "Skieruj kamerę na banknot",
+    "Point the camera at the banknote",
+    "zamknąć aplikację",
+    "close the application",
+    "Zamykam aplikację",
+    "Closing the application"
+  ];
+  String currentDisplay = " ";
+  int langAdd = 0;
   List<String> money = ["10", "20", "50", "100", "200", "500", "None"];
   List<int> _currentPredictionsList = new List.generate(8, (int index) => 0);
   int maxCorrectPredictionsInSequence =
-  4; // this is arbitrary and can be changed.
-  String defaultDisplayMessage = "Skieruj kamerę na banknot!";
-  String currentDisplayMessage = "";
+  3; // this is arbitrary and can be changed.
   bool hasDetectedPrediction = false;
+  int _NoneIter = 40;
+  bool firstStart = true;
   // vibration
   bool hasVibration = false;
   bool hasCustomVibrationsSupport = false;
-  Map vibrationmap = new Map();
-  // sound
-  Map soundmap = new Map();
-  int _NoneIter = 40;
+  String lang = Platform.localeName;
   // flashlight
   bool hasFlash = false;
   bool flashlight = false;
   int _flashIter = 0;
+  bool hasScreenReader = false;
 
-  void predictionActions(String value) async {
-    // play sound depending on value.
-    await this.soundpool.play(this.soundmap[value]);
-    // vibrate depending on value.
-    if (this.hasVibration && this.hasCustomVibrationsSupport) {
-      Vibration.vibrate(pattern: this.vibrationmap[value]);
-    }
-  }
-
-  void updatePredictionAction(int prediction) async {
-
-    if (this.money[prediction] == 'None') {
+  void updatePredictionAction() async {
+    if (this.money[_prediction] == 'None') {
+      currentDisplay = " ";
       if(_NoneIter > 0){
         _NoneIter = _NoneIter - 1;
       } else {
-        await this.soundpool.play(this.soundmap['None']);
+        SemanticsService.announce(announcMore[0+langAdd], TextDirection.ltr);
         if (this.hasVibration && this.hasCustomVibrationsSupport) {
-          Vibration.vibrate(pattern: this.vibrationmap['None']);
+          Vibration.vibrate(pattern: [0, 150]);
         }
         _NoneIter = 40;
       }
-      debugPrint('NoneIter: '+_NoneIter.toString());
     }
 
     // if has detected prediction previously, do nothing.
@@ -108,23 +105,13 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
       return;
     }
 
-    if (this.money[prediction] != 'None') {
-      predictionActions(this.money[prediction]);
-    }
-
-  }
-
-  void flashlightAction(double value){
-    // if this device has flashlight and it is not completely dark
-    if(value < 30 && flashlight == false){
-      flashlight = true;
-      _flashIter = 20;
-    } else if(value > 70 && flashlight == true){
-      _flashIter = _flashIter - 1;
-    }
-
-    if(_flashIter == 0 && flashlight == true){
-      flashlight == false;
+    if (this.money[_prediction] != 'None') {
+      _NoneIter = 40;
+      currentDisplay = this.money[_prediction];
+      SemanticsService.announce(announcements[_prediction], TextDirection.ltr);
+      if (this.hasVibration && this.hasCustomVibrationsSupport) {
+        Vibration.vibrate(pattern: [0, 150]);
+      }
     }
   }
 
@@ -139,19 +126,15 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
 
     debugPrint('Y mean:  $yValue');
 
-    // if there is completely dark, wait 1 second and try with another input
-    if (yValue < 10) {
-      setState(() {
-        busy = true;
+    if(this.hasFlash){  // Jeśli można użyć lampy
+      if (_flashIter == 0 && flashlight == true){
         flashlight = false;
-      });
-      await Future.delayed(Duration(seconds: 1));
-      setState(() {
-        busy = false;
-      });
-      return;
-    } else if (this.hasFlash) {
-      flashlightAction(yValue);
+      } else if(yValue < 20 && flashlight == false){
+        flashlight = true;
+        _flashIter = 15;
+      } else if(yValue > 70 && flashlight == true) {
+        _flashIter = _flashIter - 1;
+      }
     }
 
     try {
@@ -182,43 +165,11 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
   }
 
   void checkFlashlightOptions() async {
-    if (await Flashlight.hasFlashlight){
-      this.hasFlash = true;
-    }
+    this.hasFlash = await Flashlight.hasFlashlight;
   }
 
-  void loadSoundAssets() async {
-    this.soundpool = Soundpool(streamType: StreamType.music);
-    ByteData asset;
-    asset = await rootBundle.load("sounds/10.wav");
-    this.soundmap["10"] = await soundpool.load(asset);
-    asset = await rootBundle.load("sounds/20.wav");
-    this.soundmap["20"] = await soundpool.load(asset);
-    asset = await rootBundle.load("sounds/50.wav");
-    this.soundmap["50"] = await soundpool.load(asset);
-    asset = await rootBundle.load("sounds/100.wav");
-    this.soundmap["100"] = await soundpool.load(asset);
-    asset = await rootBundle.load("sounds/200.wav");
-    this.soundmap["200"] = await soundpool.load(asset);
-    asset = await rootBundle.load("sounds/500.wav");
-    this.soundmap["500"] = await soundpool.load(asset);
-    asset = await rootBundle.load("sounds/None.wav");
-    this.soundmap["None"] = await soundpool.load(asset);
-    asset = await rootBundle.load("sounds/End.wav");
-    this.soundmap["End"] = await soundpool.load(asset);
-    // play starting sound
-    await this.soundpool.play(this.soundmap['None']);
-  }
-
-  void loadVibrationOptions() {
-    // in millis.
-    this.vibrationmap["None"] = [0, 150, 150];
-    this.vibrationmap["10"] = [0, 300];
-    this.vibrationmap["20"] = [0, 300, 300, 300];
-    this.vibrationmap["50"] = [0, 300, 300, 300, 300, 300];
-    this.vibrationmap["100"] = [0, 1000, 300, 1000];
-    this.vibrationmap["200"] = [0, 1000, 300, 1000, 300, 1000];
-    this.vibrationmap["500"] = [0, 3000];
+  void checkPermissionOptions() async {
+    this.cameraPermission = await Permission.camera.isGranted;
   }
 
   @override
@@ -230,23 +181,26 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
     // create a CameraController.
     _controller = CameraController(
       // Get a specific camera from the list of available cameras.
-      widget.camera,
-      // Define the resolution to use.
-      ResolutionPreset.max,
+        widget.camera,
+        // Define the resolution to use.
+        ResolutionPreset.high,
+        enableAudio: false
     );
     // Next, initialize the controller. This returns a Future.
     _initializeControllerFuture = _controller.initialize();
+    Wakelock.enable();
 
     this.checkDeviceVibrationOptions();
-    this.loadSoundAssets();
-    this.loadVibrationOptions();
     this.checkFlashlightOptions();
+    this.checkPermissionOptions();
+
+    if(lang != 'pl_PL') langAdd = 1;
 
     platform.setMethodCallHandler((MethodCall call) async {
-
       if (call.method == "predictionResult") {
         final args = call.arguments;
         int currentPrediction = args["result"];
+
         if (this._currentPredictionsList.isEmpty) {
           debugPrint('predictions list empty');
           this._currentPredictionsList.add(currentPrediction);
@@ -255,18 +209,14 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
           this._currentPredictionsList.add(currentPrediction);
         } else {
           debugPrint('Clear predictions list');
-          String lastValue = money[currentPrediction];
-          debugPrint('Last value: $lastValue');
           this._currentPredictionsList.clear();
-          debugPrint('Size of list: +' +
-              this._currentPredictionsList.length.toString());
           this.hasDetectedPrediction = false;
         }
 
         if (this._currentPredictionsList.length >=
             this.maxCorrectPredictionsInSequence) {
           this._prediction = this._currentPredictionsList.last;
-          this.updatePredictionAction(this._prediction);
+          this.updatePredictionAction();
           this.hasDetectedPrediction = true;
         }
 
@@ -275,7 +225,6 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
         } else _controller.setFlashMode(FlashMode.off);
 
         setState(() {
-          _iter = _iter + 1;
           busy = false;
         });
       }
@@ -284,9 +233,10 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
 
     _initializeControllerFuture.then((x) {
       _controller.startImageStream((CameraImage availableImage) async {
-        if (busy) return;
-
-        frames = 0;
+        if (busy) {
+          return;
+        }
+        debugPrint(_controller.value.aspectRatio.toString());
         await _getPrediction(availableImage);
       });
     });
@@ -297,46 +247,93 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
     // Dispose of the controller when the widget is disposed.
     WidgetsBinding.instance.removeObserver(this);
     _controller.stopImageStream();
+    _controller.setFlashMode(FlashMode.off);
     _controller.dispose();
+    Wakelock.disable();
     super.dispose();
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    setState(() {
-      _lastLifecycleState = state;
-    });
+  void didChangeAppLifecycleState(AppLifecycleState state) async{
+    cameraPermission = await Permission.camera.isGranted;
+    if (state == AppLifecycleState.detached ||
+        state == AppLifecycleState.paused ||
+        (state == AppLifecycleState.inactive && cameraPermission == true) ||
+        (state == AppLifecycleState.resumed && cameraPermission == false)){
+      this.dispose();
+      exit(0);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
-    if ( _lastLifecycleState != null) {
-      this.dispose();
-      exit(0);
+    if(cameraPermission && !alreadyChecked) {
+      SemanticsService.announce(announcMore[0+langAdd], TextDirection.ltr);
+      alreadyChecked = true;
     }
-
-    return Scaffold(
-      // Wait until the controller is initialized before displaying the
-      // camera preview. Use a FutureBuilder to display a loading spinner
-      // until the controller has finished initializing.
-        body: Container(
-            color: Colors.black54,
+    final mediaQueryData = MediaQuery.of(context);
+    if(mediaQueryData.accessibleNavigation) {
+      return Semantics(
+        onTapHint: announcMore[2+langAdd],
+        child: Material(
+          child: Container(
             child: GestureDetector(
-              onDoubleTap: (){
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child:Semantics(
+                  excludeSemantics: true,
+                  child: Text(
+                    currentDisplay,
+                    style: TextStyle(
+                      color: Colors.limeAccent,
+                      backgroundColor: Colors.black,
+                      fontSize: 10000,
+                    ),
+                  ),
+                ),
+              ),
+              onTap: () {
                 if (!isTapped) {
                   this.isTapped = true;
-                  this.soundpool.play((this.soundmap['End']));
-                  Timer(Duration(seconds: 2), () {
+                  SemanticsService.announce(announcMore[4+langAdd], TextDirection.ltr);
+                  Timer(Duration(milliseconds: 500), () {
                     this.dispose();
                     exit(0);
-                  }
-                  );
+                  });
                 }
               },
-            )
-        )
-    );
+            ),
+          ),
+        ),
+      );
+    } else {
+      return Stack(
+        children: [
+          Center  (
+            child: Container (
+              child: new CameraPreview(_controller),
+            ),
+          ),
+          Center(
+            child: Material(
+              type: MaterialType.transparency,
+              child: Container(
+                  child: FittedBox(
+                    fit: BoxFit.fill,
+                    child:Text(
+                      currentDisplay,
+                      style: TextStyle(
+                        color: Colors.limeAccent,
+                        fontSize: 10000,
+                      ),
+                    ),
+                  )
+              ),
+            ),
+          )
+        ],
+      );
+    }
   }
 }
 
