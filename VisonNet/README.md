@@ -25,6 +25,7 @@ Best to use with venv environment
 
 All runnable scripts have main function attached 
 Look for ^__main__^
+
 ####Major ones are in Functional directory
 - training.py
 - evaluate.py
