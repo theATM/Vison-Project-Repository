@@ -1,0 +1,4 @@
+this is directory when you can insert data for Python rotateimg.py script
+You should create
+indir - for imput images
+outdir - for output images

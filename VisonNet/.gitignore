@@ -35,6 +35,8 @@ Factory/MovFactory/waiting/*
 !Factory/MovFactory/waiting/info.txt
 Factory/MovFactory/extracted/*
 !Factory/MovFactory/extracted/info.txt
+Factory/rotateFactory/indir/*
+Factory/rotateFactory/outdir/*
 
 Factory/ImgFactory/waiting/*
 Factory/ImgFactory/compressed/*

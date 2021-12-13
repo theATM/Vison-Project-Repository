@@ -1,1 +1,6 @@
 This is folder used to store symbolic links to data
+add directories: 
+dataset - for all training datasets
+valset - for all validation data sets
+testset - for all test data sets
+and populate them with data

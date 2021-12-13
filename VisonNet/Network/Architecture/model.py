@@ -300,7 +300,11 @@ class UsedModel:
         if self.__model_type == ModelType.Original_Resnet18:
             self.model = torch.quantization.fuse_modules(self.model, self.getLayersToFuse())
         elif self.__model_type == ModelType.Original_Mobilenet2:
-            self.model.fuse_model()
+            print("Mobilenetv2 is not currently supported, to quantisation due to the bug")
+            #the bug =  Could not run 'quantized::linear' with arguments from the 'CPU' backend
+            #TODO - try to fix the bug - it worked before (?)
+            exit(-1)
+            #self.model.fuse_model()
         else:
             print("Unrecognised model type")
             exit(-1)

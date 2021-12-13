@@ -39,7 +39,7 @@ __train_cudnn_enable = True
 __train_cudnn_benchmark_enable = True  # zysk +2% cuda  (?)
 __train_initial_learning_rate = 0.002 #0.015
 __train_scheduler_gamma = 0.8
-__train_eval_per_epochs = 20 #20
+__train_eval_per_epochs = 1 #20
 __train_grad_per_batch = 8#4
 __train_print_per_batch = 256#128
 __train_milestones = [80,120,160]#[80, 160, 240, 300]
@@ -49,7 +49,7 @@ __train_milestones = [80,120,160]#[80, 160, 240, 300]
 # Quantisation Parameters
 __quant_model_indir_name = "Quantin"
 __quant_model_outdir_name = "Quantout"
-__quant_model_name = "Original_Mobilenet2_06-12-2021_15-08_Last__Epoch_0051_Acc_92.68.pth"
+__quant_model_name = "Original_Mobilenet2_13-12-2021_16-41_Epoch_0004_Acc_79.08.pth"
 __quant_save_model_name = 'Mobile50QuantMy92.pt'
 __quant_device = 'cpu'
 __quant_eval_enable = False
