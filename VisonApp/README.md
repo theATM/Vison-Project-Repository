@@ -1,2 +1,6 @@
+This is directory dedicated to the Appliaction VisonApp
+This is dart appliaction,
+Curently supported only on Android
 
-gfgfdfgdggggggggggggggggggg
+Insert models here:
+VisonApp/android/app/src/main/assets
