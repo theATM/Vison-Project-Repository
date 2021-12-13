@@ -165,8 +165,8 @@ class EnhanceBrightness(object): #Karol's work
 
 
 
-class AddGaussianNoise(object):
-    def __init__(self, mean=0., std=1.):
+class AddGaussianNoise(object): #this is dangerous do not use!!!
+    def __init__(self, mean=0., std=0.4):
         self.std = std
         self.mean = mean
 

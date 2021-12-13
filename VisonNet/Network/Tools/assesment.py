@@ -15,14 +15,18 @@ import Network.parameters as par
 import Network.Architecture.model as mod
 import Network.Architecture.modeltype as modtype
 
-MODEL_PATH =  '../../Models/Original_Resnet18_02-12-2021_20-43/Quant_Original_Resnet18_02-12-2021_20-43Last_Epoch_0241_Acc_81.95.pt'
-MY_IMAGE_PATH = "/home/olek/Desktop/LasTest/20211204_190935.jpg"
+MODEL_PATH = "/home/olek/Projects/VisonProject/VisonNet/Models/Original_Resnet18_07-12-2021_23-36/SixthDotSevHalGood190ResQuant97.pt"
+    #"/home/olek/Projects/VisonTestLoadAp/app/src/main/assets/FourthGood240ResQuant92.pt"
+#'../../Models/Original_Resnet18_02-12-2021_20-43/Quant_Original_Resnet18_02-12-2021_20-43Last_Epoch_0241_Acc_81.95.pt'
+MY_IMAGE_PATH = "/home/olek/Projects/VisonTestLoadAp/app/src/main/assets/20211204_190935.jpg"
+#"/home/olek/Desktop/LasTest/20211204_190935.jpg"
  #"/home/olek/Pictures/VisonData/TrainingData/TrainDataStorage/100/atmImg100/atmImg100_Normal/20210923_220318c.jpg"
 #"/home/olek/Desktop/LasTest/20211204_190935.jpg"
 #"/home/olek/Desktop/LasTest/20211204_154215.jpg"
 #'../Data/testset/500/63.jpg'
 SHOW_ONLY_NEGATIVE = True #used when assesing many images  - the program would stop only on those predicted wrong
 SCAN_FOR_WORST = True #used to show the worst pedicted picture in dataset
+PRINT_BAD = False
 MODEL_TYPE = modtype.ModelType.Original_Resnet18
 transform_asses = trans.TRANSFORM_BLANK
 LOAD_DEVICE = par.TRAIN_DEVICE
@@ -48,7 +52,7 @@ def main():
 
     elif user_choice == 0:
         print("Chosen Multi Image Assessment")
-        _, _, asses_loader = bank.loadData(arg_load_train=False, arg_load_val=False, arg_load_test=True)
+        _, _, asses_loader  = bank.loadData(arg_load_train=False, arg_load_val=False, arg_load_test=True)
         print("Assessment Started")
         assesManyImages(used_model, asses_loader)
         return
@@ -91,9 +95,14 @@ def assesOneImage(used_model, image_path):
 
 def assesManyImages(used_model, asses_loader):
     worst_image = None
-
+    all_count = 0
+    all_by_class = [0,0,0,0,0,0,0]
+    bad_count = 0
+    bad_by_class = [0,0,0,0,0,0,0]
+    bad_by_file = dict()
     used_model.model.eval()
     with torch.no_grad():
+        if PRINT_BAD: print("Bad images will be printed")
         for i, batch in enumerate(asses_loader):
             input_batch, label_batch, name_batch = batch['image'], batch['class'], batch['name']
             output_batch = used_model.model(input_batch)
@@ -107,15 +116,29 @@ def assesManyImages(used_model, asses_loader):
                 pred_val = pred_val_batch.numpy()[j][0]
                 output = output_batch.numpy()[j]
 
+                all_count+=1
+                all_by_class[label]+=1
+
+                if SHOW_ONLY_NEGATIVE and pred == label:
+                    continue
+
+                if pred != label:
+                    bad_count+=1
+                    bad_by_class[label]+=1
+                    dir_name = name.split("/")[-2]
+                    if dir_name in bad_by_file: bad_by_file[dir_name] += 1
+                    else: bad_by_file[dir_name] = 1
+
+                if PRINT_BAD and pred != label :
+                    printAssesResults(name, label, output, pred, pred_val)
+
                 if SCAN_FOR_WORST:
                     if pred != label and (worst_image == None or pred_val < worst_image[4] ):
                         worst_image = (name, label, output, pred, pred_val )
                     continue
 
-                if SHOW_ONLY_NEGATIVE and pred == label:
-                    continue
-
-                printAssesResults(name, label, output, pred, pred_val)
+                if PRINT_BAD is False or pred == label:
+                    printAssesResults(name, label, output, pred, pred_val)
 
                 user_choice = assesMenu()
                 if user_choice == 0:
@@ -134,9 +157,22 @@ def assesManyImages(used_model, asses_loader):
             img = Image.open(worst_image[0])
             img.show(title="Image " + worst_image[0])
 
+    print(end="\n")
+    print(f"Checked {len(asses_loader)} images")
+    print(f"Founded {bad_count} not recognised correctly")
+    print(f"That leaves {len(asses_loader)-bad_count} images recognised correctly")
+    print(f"Because there are {all_count} in this dataset")
+    print(f"Bad images by class")
+    print(bad_by_class)
+    print(f"All images by class")
+    print(all_by_class)
+    print("There are all dirs with bad images")
+    print(bad_by_file)
+    print(end="\n")
+
 
 def printAssesResults(image_name, image_label, output, pred, pred_val):
-    print("Image: " + image_name)
+    print("\nImage: " + image_name)
     print("Model Predictions:")
     print(["%.4f" % o for o in output])
     print("Available Classes:")
@@ -156,6 +192,7 @@ def printAssesResults(image_name, image_label, output, pred, pred_val):
 
     print("This image should be " + "recognised as " + str(bank.anticlasses.get(image_label)) + " zl, "
           + "class nr " + str(image_label) + " ( " + str(correct_val) + " )")
+    print(end="\n")
 
 #Menu's:
 

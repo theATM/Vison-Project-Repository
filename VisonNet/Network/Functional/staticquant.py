@@ -10,7 +10,7 @@ import Network.Architecture.model as mod
 import Network.Functional.evaluate as eva
 
 BACKEND_ENGINE = ''  #quantization engine
-DO_EVALUATE = True
+DO_EVALUATE = par.QUANT_EVAL_ENABLE
 quantDevice = None
 
 def quantMain():
@@ -55,7 +55,6 @@ def quantMain():
     quant_model.addQuantStubs() #needed???? for old 1.6  way
 
     quant_model.fuzeModel()
-    #quant_model.model.fuse_model()
 
     # Evaluate Our Model
     if DO_EVALUATE:

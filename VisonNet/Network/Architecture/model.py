@@ -93,7 +93,7 @@ class UsedModel:
                 self.__loadQuantizedModel(arg_load_path)
             else: # Loading normal (float) model
                 self.__loadModel(arg_load_path, arg_load_device, arg_load_raw=arg_load_raw)
-                self.start_epoch = self.__model_save_epoch + 1 # start form the next epoch
+                if par.LOAD_SUPER_RAW is False: self.start_epoch = self.__model_save_epoch + 1 # start form the next epoch
         else:
             print("Model Created")
 
@@ -166,8 +166,10 @@ class UsedModel:
 
         #Load File:
         model_load_dict = torch.load(arg_load_path, map_location=arg_load_device)
-
-        if arg_load_raw is False:
+        if par.LOAD_SUPER_RAW:
+            saved_model_states = model_load_dict
+            saved_optim_states = None
+        elif arg_load_raw is False:
             #Deserialize:
             saved_model_states = model_load_dict['model']
             saved_optim_states = model_load_dict['optimizer']
@@ -298,7 +300,7 @@ class UsedModel:
         if self.__model_type == ModelType.Original_Resnet18:
             self.model = torch.quantization.fuse_modules(self.model, self.getLayersToFuse())
         elif self.__model_type == ModelType.Original_Mobilenet2:
-            self.model.fuzeModel()
+            self.model.fuse_model()
         else:
             print("Unrecognised model type")
             exit(-1)

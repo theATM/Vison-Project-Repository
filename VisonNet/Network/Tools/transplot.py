@@ -11,12 +11,13 @@ import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as Tf
 import Network.Bank.banksethelpers as bsh
+import Network.Bank.transforms as trans
 
 plt.rcParams["savefig.bbox"] = 'tight'
-org_img = Image.open("/home/olek/Studies/Inzynierka/Data/dataset/OriginalDataset//10/1.jpg")
-my_img = Image.open("/home/olek/Studies/Inzynierka/Data/dataset/IndependentDataset/10/atmImg10_Normal/20211002_205902c.jpg")
-dark_img = Image.open("/home/olek/Studies/Inzynierka/Data/dataset/IndependentDataset/10/20211104_222556_desent/20211104_222556s_064c.png")
-dark_lamp_img = Image.open("/home/olek/Studies/Inzynierka/Data/dataset/IndependentDataset/10/20211104_222556_desent/20211104_222556s_1133c.png")
+org_img = Image.open("/home/olek/Pictures/VisonData/TrainingData/Datasets/OriginalDataset/10/originalImg10/1.jpg")
+my_img = Image.open("/home/olek/Pictures/VisonData/TrainingData/Datasets/IndependentDataset2/10/atmImg10_Normal/20211002_205902c.jpg")
+dark_img = Image.open("/home/olek/Pictures/VisonData/TrainingData/Datasets/IndependentDataset2/10/20211104_222556_desent_10_dark_meh/20211104_222556s_064c.png")
+dark_lamp_img = Image.open("/home/olek/Pictures/VisonData/TrainingData/Datasets/IndependentDataset2/10/20211104_222706_face_10_lamp_darkTrick/20211104_222706s_003c.png")
 dark_lown_img = Image.open("/home/olek/Pictures/VisonData/TrainingData/TrainDataStorage/10/atmImg10/atmImg10_Dark/20210529_222951c.jpg")
 czerwonyKwiat = Image.open("/home/olek/Pictures/Globe/czerwonyKwiat.jpeg")
 
@@ -84,42 +85,86 @@ my_Transform = T.Compose([
     T.Resize(224),
     T.CenterCrop((224, 224)),
     bsh.RandomRotationTransform(angles=[-90, 90, 0, 180, -180]),
+    #bsh.CustomColorJitter(contrast=(0.7,1.3),brightness=(0.4,1.45),saturation=(0.8,1.2)),
     bsh.CustomColorJitter(contrast=(0.7,1.3),brightness=(0.4,1.45),saturation=(0.8,1.2)),
+    #T.transforms.RandomPerspective(distortion_scale=0.5, p=0.5 , fill=0),
+    T.transforms.ToTensor(),
+    #T.transforms.RandomApply(
+    #        [bsh.AddGaussianNoise(0.5, 0.7)],
+    #        p=0.25
+    #    ),
+    T.transforms.GaussianBlur((5,9),(1,5)),
+    #T.transforms.RandomErasing(p=0.5, scale=(0.02, 0.08), ratio=(0.5, 2.3), value='random'),
+    T.transforms.ToPILImage(),
 
 ])
 
+TRANSFORM_BLANK = \
+    T.transforms.Compose([
+        #T.transforms.ToPILImage(),
+        T.transforms.Resize(224),
+        T.transforms.CenterCrop((224, 224)),
+        #T.transforms.ToTensor(),
+        #T.transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701],
+        #                                 std=[0.24467267, 0.23742135, 0.24701703]),
+        #T.transforms.ToPILImage(),
+    ])
 
-sub_imgs = [my_Transform(my_img) for _ in range(19)]
-plot(my_img,sub_imgs)
-im = my_img.convert('L')
+TRANSFORM_QUANTIZE = TRANSFORM_BLANK
+TRANSFORM_EVAL = TRANSFORM_BLANK
+
+TRANSFORM_TRAIN = \
+    T.transforms.Compose([
+        #T.transforms.ToPILImage(),
+        T.transforms.Resize(224),
+        T.transforms.CenterCrop((224, 224)),
+        bsh.RandomRotationTransform(angles=[-90, 90, 0, 180, -180]), #Rotates randomly by 90 degrees - keeps whole image inside circle
+        bsh.CustomColorJitter(contrast=(0.7,1.3),brightness=(0.4,1.45),saturation=(0.8,1.2)),
+        # T.transforms.ToTensor(),
+        #T.transforms.Normalize(mean=[0.48269427, 0.43759444, 0.4045701],
+        #                                std=[0.24467267, 0.23742135, 0.24701703]),
+
+        #T.transforms.ToPILImage(),
+    ])
+
+
+#sub_imgs = [my_Transform(my_img) for _ in range(19)]
+#plot(my_img,sub_imgs)
+#im = my_img.convert('L')
+#stat = ImageStat.Stat(im)
+#print(stat.rms[0])
+#
+#sub_imgs = [my_Transform(org_img) for _ in range(19)]
+#plot(org_img,sub_imgs)
+#im = org_img.convert('L')
+#stat = ImageStat.Stat(im)
+#print(stat.rms[0])
+#
+#sub_imgs = [my_Transform(dark_img) for _ in range(19)]
+#plot(dark_img,sub_imgs)
+#im = dark_img.convert('L')
+#stat = ImageStat.Stat(im)
+#print(stat.rms[0])
+#
+#sub_imgs = [my_Transform(dark_lamp_img) for _ in range(19)]
+#plot(dark_lamp_img,sub_imgs)
+#im = dark_lamp_img.convert('L')
+#stat = ImageStat.Stat(im)
+#print(stat.rms[0])
+#
+#sub_imgs = [my_Transform(dark_lown_img) for _ in range(19)]
+#plot(dark_lown_img,sub_imgs)
+#im = dark_lown_img.convert('L')
+#stat = ImageStat.Stat(im)
+#print(stat.rms[0])
+#
+sub_imgs = [TRANSFORM_BLANK(czerwonyKwiat) for _ in range(4)]
+plot(czerwonyKwiat,sub_imgs)
+im = czerwonyKwiat.convert('L')
 stat = ImageStat.Stat(im)
 print(stat.rms[0])
 
-sub_imgs = [my_Transform(org_img) for _ in range(19)]
-plot(org_img,sub_imgs)
-im = org_img.convert('L')
-stat = ImageStat.Stat(im)
-print(stat.rms[0])
-
-sub_imgs = [my_Transform(dark_img) for _ in range(19)]
-plot(dark_img,sub_imgs)
-im = dark_img.convert('L')
-stat = ImageStat.Stat(im)
-print(stat.rms[0])
-
-sub_imgs = [my_Transform(dark_lamp_img) for _ in range(19)]
-plot(dark_lamp_img,sub_imgs)
-im = dark_lamp_img.convert('L')
-stat = ImageStat.Stat(im)
-print(stat.rms[0])
-
-sub_imgs = [my_Transform(dark_lown_img) for _ in range(19)]
-plot(dark_lown_img,sub_imgs)
-im = dark_lown_img.convert('L')
-stat = ImageStat.Stat(im)
-print(stat.rms[0])
-
-sub_imgs = [my_Transform(czerwonyKwiat) for _ in range(19)]
+sub_imgs = [TRANSFORM_TRAIN(czerwonyKwiat) for _ in range(19)]
 plot(czerwonyKwiat,sub_imgs)
 im = czerwonyKwiat.convert('L')
 stat = ImageStat.Stat(im)

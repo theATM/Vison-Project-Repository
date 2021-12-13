@@ -21,8 +21,7 @@ class ParametersProfileType(Enum):
 
 
 # Change to your profile
-PARAMETERS_PROFILE = ParametersProfileType.ATM
-#PARAMETERS_PROFILE = ParametersProfileType.POKISIEK
+PARAMETERS_PROFILE = ParametersProfileType.ATM_MOBILENET
 
 # Check if profile is properly set up
 if not isinstance(PARAMETERS_PROFILE, ParametersProfileType):
@@ -34,208 +33,23 @@ if not isinstance(PARAMETERS_PROFILE, ParametersProfileType):
 
 if PARAMETERS_PROFILE == ParametersProfileType.POKISIEK:
 
-    #Data Parameters
-    __data_path_prefix = "../.."
-    __data_dir_name = "Data"
-    __data_dataset_name = 'dataset'
-    __data_testset_name = 'testset'
-    __data_valset_name = 'valset'
-    __data_dataset_batch_size = 16
-    __data_valset_batch_size = 4
-    __data_testset_batch_size = 4
-    __data_dataset_num_workers = 8
-    __data_valset_num_workers = 2
-    __data_testset_num_workers = 2
-    __data_single_batch_test_enable: bool = False
-
-    ####################################################
-
-    # Model Parameters
-    __model_dir_name = '../../Models/'
-    __model_file_type = '.pth'
-    __model_additional_dirs = ""
-    __model_load_name = 'Original_Resnet18_11-10-2021_21-21_Epoch_0020_Acc_21.95.pth'
-    __model_load_raw_model_enable :bool = False
-    __model_used_model_type = modtype.ModelType.Original_Mobilenet2
-
-    ####################################################
-
-    #Training Parameters
-    __train_max_epoch_number = 400
-    __train_device = 'cuda:0'
-    __train_load_model_enable :bool = False
-    __train_cudnn_enable = True
-    __train_cudnn_benchmark_enable = True
-    __train_initial_learning_rate = 0.01
-    __train_scheduler_gamma = 0.8
-    __train_eval_per_epochs = 20
-    __train_grad_per_batch = 4
-
-    ####################################################
-
-    #Quantisation Parameters
-    __quant_model_indir_name = "Quantin"
-    __quant_model_outdir_name = "Quantout"
-    __quant_model_name = 'Original_Resnet18_13-10-2021_07-44_Epoch_0380_Acc_89.71.pthEpoch_0240_Acc_93.68_rs.pth'
-    __quant_save_model_name = 'ResQuant84First.pt'
-    __quant_device = 'cpu'
-    __quant_eval_enable = False
-    __quant_dataset_batch_size = 4
-    __quant_valset_batch_size = 4
-    __quant_testset_batch_size = 4
-    __quant_dataset_num_workers = 0
-    __quant_valset_num_workers = 0
-    __quant_testset_num_workers = 0
-
-    ####################################################
-    #Eval
-    __eval_load_model_is_quantized = False
-
+    import Network.Parameters.pokisiek as user
 
 ########################################################################################################################
 
 elif PARAMETERS_PROFILE == ParametersProfileType.ATM:
 
-    # Data Parameters
-    __data_path_prefix = "../.."
-    __data_dir_name = "Data"
-    __data_dataset_name = 'dataset'
-    __data_testset_name = 'testset'
-    __data_valset_name = 'valset'
-
-
-    __data_dataset_batch_size = 16
-    __data_valset_batch_size = 8
-    __data_testset_batch_size = 4
-
-    __data_dataset_num_workers = 8
-    __data_valset_num_workers = 4
-    __data_testset_num_workers = 2
-
-
-    __data_single_batch_test_enable :bool = False # Will run the model with only one batch to see if it works properly - must set train_grad_per_batch to 1
-
-    ####################################################
-
-    # Model Parameters
-    __model_path_prefix = "../.."
-    __model_dir_name = 'Models'
-    __model_file_type = '.pth' # Model Presumed extension
-    __model_additional_dirs = "Original_Resnet18_04-12-2021_00-22"
-    __model_load_name = 'FourthGood240ResQuant92.pt'
-    __model_load_raw_model_enable :bool = False
-    __model_used_model_type = modtype.ModelType.Original_Resnet18
-
-
-    ####################################################
-
-    # Training Parameters
-    __train_max_epoch_number = 100 #240 #800
-    __train_device = 'cuda:0'  # for cpu type 'cpu', for gpu type 'cuda' to check for gpu enter to command prompt nvidia-smi
-    __train_load_model_enable :bool = False
-    __train_cudnn_enable = True
-    __train_cudnn_benchmark_enable = True  # zysk +2% cuda  (?)
-    __train_initial_learning_rate = 0.001 #must be min 0.00(..)
-    __train_scheduler_gamma = 0.75 #0.5 #0.2
-    __train_eval_per_epochs = 10
-    __train_grad_per_batch = 8
-    __train_print_per_batch = 256
-    __train_milestones = [40,60,80] #[40, 80, 120, 180]#[60, 120, 200, 400]#[32, 128, 160, 256, 512, 720]
-
-
-    ####################################################
-
-    # Quantisation Parameters
-    __quant_model_indir_name = "Quantin"
-    __quant_model_outdir_name = "Quantout"
-    __quant_model_name = 'Original_Resnet18_04-12-2021_23-10_Last__Epoch_0101_Acc_95.70.pth'
-    __quant_save_model_name =  'FifthGood100ResQuant95.pt'
-    __quant_device = 'cpu'
-    __quant_eval_enable = False
-    __quant_dataset_batch_size = 4
-    __quant_valset_batch_size = 4
-    __quant_testset_batch_size = 4
-    __quant_dataset_num_workers = 0
-    __quant_valset_num_workers = 0
-    __quant_testset_num_workers = 0
-    #Eval
-    __eval_load_model_is_quantized = True
-
+    import Network.Parameters.atmresnet as user
 
 ########################################################################################################################
 
 elif PARAMETERS_PROFILE == ParametersProfileType.ATM_MOBILENET:
-    # Data Parameters
 
-    __data_path_prefix = "../.."
-    __data_dir_name = "Data"
-    __data_dataset_name = 'dataset'
-    __data_testset_name = 'testset'
-    __data_valset_name = 'valset'
-
-    __data_dataset_batch_size = 16
-    __data_valset_batch_size = 4
-    __data_testset_batch_size = 4
-
-    __data_dataset_num_workers = 8
-    __data_valset_num_workers = 2
-    __data_testset_num_workers = 2
-
-    __data_single_batch_test_enable: bool = False  # Will run the model with only one batch to see if it works properly
-
-    ####################################################
-
-    # Model Parameters
-    __model_path_prefix = "../.."
-    __model_dir_name = 'Models'
-    __model_additional_dirs = "/ModelType.Original_Mobilenet2_26-11-2021_08-33/"
-    __model_load_name = 'ModelType.Original_Mobilenet2_26-11-2021_08-33Epoch_0240_Acc_95.60.pth'
-    __model_file_type = '.pth'  # Model Presumed extension
-    __model_load_raw_model_enable: bool = False
-    __model_used_model_type = modtype.ModelType.Original_Mobilenet2
-
-    ####################################################
-
-    # Training Parameters
-    __train_max_epoch_number = 400
-    __train_device = 'cuda:0'  # for cpu type 'cpu', for gpu type 'cuda' to check for gpu enter to command prompt nvidia-smi
-    __train_load_model_enable: bool = False
-    __train_cudnn_enable = True
-    __train_cudnn_benchmark_enable = True  # zysk +2% cuda  (?)
-    __train_initial_learning_rate = 0.015
-    __train_scheduler_gamma = 0.1
-    __train_eval_per_epochs = 20
-    __train_grad_per_batch = 4
-    __train_print_per_batch = 128
-    __train_milestones = [80, 160, 240, 300]
-
-    ####################################################
-
-    # Quantisation Parameters
-    __quant_model_indir_name = "Quantin"
-    __quant_model_outdir_name = "Quantout"
-    __quant_model_name = ""
-    __quant_save_model_name = 'ResQuant84First.pt'
-    __quant_device = 'cpu'
-    __quant_eval_enable = False
-    __quant_dataset_batch_size = 4
-    __quant_valset_batch_size = 4
-    __quant_testset_batch_size = 4
-    __quant_dataset_num_workers = 0
-    __quant_valset_num_workers = 0
-    __quant_testset_num_workers = 0
-
-    #Eval
-    __eval_load_model_is_quantized = False
+    import Network.Parameters.atmmobile as user
 
 else: #None Init
-    __data_path_prefix , __data_dir_name, __data_dataset_name, __data_testset_name, __data_valset_name, __data_dataset_batch_size, __data_valset_batch_size \
-    , __data_testset_batch_size, __data_dataset_num_workers, __data_valset_num_workers, __data_testset_num_workers, __data_single_batch_test_enable \
-    , __model_dir_name, __model_file_type,__model_additional_dirs, __model_load_name, __model_load_raw_model_enable, __model_used_model_type, __train_max_epoch_number \
-    , __train_device, __train_load_model_enable, __train_cudnn_enable, __train_cudnn_benchmark_enable, __train_initial_learning_rate, __train_scheduler_gamma \
-    , __train_eval_per_epochs, __train_grad_per_batch, __train_print_per_batch , __quant_model_indir_name, __quant_model_outdir_name, __quant_model_name, __quant_save_model_name \
-    , __quant_device, __quant_eval_enable, __quant_dataset_batch_size, __quant_valset_batch_size, __quant_testset_batch_size, __quant_dataset_num_workers \
-    , __quant_valset_num_workers, __quant_testset_num_workers, __eval_load_model_is_quantized = None
+
+    import Network.Parameters.none as user
 
 
 ########################################################################################################################
@@ -243,70 +57,92 @@ else: #None Init
 ########################################################################################################################
 
 # Training Parameters
-TRAIN_MAX_EPOCH_NUMBER : int = __train_max_epoch_number
-TRAIN_DEVICE : str = __train_device  # for cpu type 'cpu', for gpu type 'cuda' to check for gpu enter to command prompt nvidia-smi
-TRAIN_LOAD_MODEL_ENABLE : bool = __train_load_model_enable
-torch.backends.cudnn.enabled = __train_cudnn_enable
-torch.backends.cudnn.benchmark = __train_cudnn_benchmark_enable  # zysk +2% cuda  (?)
-TRAIN_INITIAl_LEARNING_RATE : float = __train_initial_learning_rate
-TRAIN_SCHEDULER_GAMMA : float = __train_scheduler_gamma
-TRAIN_EVAL_PER_EPOCHS : int = __train_eval_per_epochs
-TRAIN_GRAD_PER_BATCH : int = __train_grad_per_batch
-TRAIN_PRINT_PER_BATCH :int =  __train_print_per_batch
-TRAIN_MILESTONES = __train_milestones
+TRAIN_MAX_EPOCH_NUMBER : int =              user.__train_max_epoch_number
+TRAIN_DEVICE : str =                        user.__train_device  # for cpu type 'cpu', for gpu type 'cuda' to check for gpu enter to command prompt nvidia-smi
+TRAIN_LOAD_MODEL_ENABLE : bool =            user.__train_load_model_enable
+torch.backends.cudnn.enabled =              user.__train_cudnn_enable
+torch.backends.cudnn.benchmark =            user.__train_cudnn_benchmark_enable  # zysk +2% cuda  (?)
+TRAIN_INITIAl_LEARNING_RATE : float =       user.__train_initial_learning_rate
+TRAIN_SCHEDULER_GAMMA : float =             user.__train_scheduler_gamma
+TRAIN_EVAL_PER_EPOCHS : int =               user.__train_eval_per_epochs
+TRAIN_GRAD_PER_BATCH : int =                user.__train_grad_per_batch
+TRAIN_PRINT_PER_BATCH :int =                user.__train_print_per_batch
+TRAIN_MILESTONES =                          user.__train_milestones
 
 ####################################################
 
 # Data Parameters
-DATA_PATH_PREFIX : str = __data_path_prefix
-DATA_DIR_NAME : str = __data_dir_name
-DATA_DATASET_PATH : str = __data_path_prefix + '/' + __data_dir_name + '/' + __data_dataset_name
-DATA_VALSET_PATH : str = __data_path_prefix + '/' + __data_dir_name + '/' + __data_valset_name
-DATA_TESTSET_PATH : str = __data_path_prefix + '/' + __data_dir_name + '/' + __data_testset_name
+DATA_PATH_PREFIX : str =                    user.__data_path_prefix
+DATA_DIR_NAME : str =                       user.__data_dir_name
+DATA_DATASET_PATH : str =                   user.__data_path_prefix + '/' \
+                                          + user.__data_dir_name + '/' \
+                                          + user.__data_dataset_name
 
-DATA_DATASET_BATCH_SIZE : int = __data_dataset_batch_size
-DATA_VALSET_BATCH_SIZE : int = __data_valset_batch_size
-DATA_TESTSET_BATCH_SIZE : int = __data_testset_batch_size
+DATA_VALSET_PATH : str =                    user.__data_path_prefix + '/' \
+                                          + user.__data_dir_name + '/' \
+                                          + user.__data_valset_name
 
-DATA_DATASET_NUM_WORKERS : int = __data_dataset_num_workers
-DATA_VALSET_NUM_WORKERS : int = __data_valset_num_workers
-DATA_TESTSET_NUM_WORKERS : int = __data_testset_num_workers
+DATA_TESTSET_PATH : str =                   user.__data_path_prefix + '/' \
+                                          + user.__data_dir_name + '/' \
+                                          + user.__data_testset_name
 
-DATA_LOAD_RAW_MODEL_ENABLE : bool = __model_load_raw_model_enable
-DATA_SINGLE_BATCH_TEST_ENABLE : bool = __data_single_batch_test_enable  # Will run the model with only one batch to see if it works properly
+DATA_DATASET_BATCH_SIZE : int =             user.__data_dataset_batch_size
+DATA_VALSET_BATCH_SIZE : int =              user.__data_valset_batch_size
+DATA_TESTSET_BATCH_SIZE : int =             user.__data_testset_batch_size
+
+DATA_DATASET_NUM_WORKERS : int =            user.__data_dataset_num_workers
+DATA_VALSET_NUM_WORKERS : int =             user.__data_valset_num_workers
+DATA_TESTSET_NUM_WORKERS : int =            user.__data_testset_num_workers
+
+DATA_LOAD_RAW_MODEL_ENABLE : bool =         user.__model_load_raw_model_enable
+DATA_SINGLE_BATCH_TEST_ENABLE : bool =      user.__data_single_batch_test_enable  # Will run the model with only one batch to see if it works properly
 
 ####################################################
 
 # Model Parameters
 
-MODEL_DIR_MODEL : str = __model_dir_name
-MODEL_FILE_TYPE : str = __model_file_type  # Model Presumed extension
-MODEL_LOAD_MODEL_PATH :str = __model_path_prefix + '/' + __model_dir_name + '/' + (__model_additional_dirs+"/" if __model_additional_dirs != "" else "") +  __model_load_name
-MODEL_USED_MODEL_TYPE : modtype.ModelType = __model_used_model_type
+MODEL_DIR_MODEL : str =                     user.__model_dir_name
+MODEL_FILE_TYPE : str =                     user.__model_file_type  # Model Presumed extension
+
+MODEL_LOAD_MODEL_PATH :str =                user.__model_path_prefix + '/' \
+                                          + user.__model_dir_name + '/' \
+                                          +(user.__model_additional_dirs+"/"
+                                         if user.__model_additional_dirs != "" else "") \
+                                          + user.__model_load_name
+
+MODEL_USED_MODEL_TYPE : modtype.ModelType = user.__model_used_model_type
 
 
 ####################################################
 
 # Quantisation Parameters
-QUANT_MODEL_INDIR : str = __quant_model_indir_name
-QUANT_MODEL_OUTDIR : str = __quant_model_outdir_name
+QUANT_MODEL_INDIR : str =                   user.__quant_model_indir_name
+QUANT_MODEL_OUTDIR : str =                  user.__quant_model_outdir_name
 
-QUANT_MODEL_PATH : str = __model_path_prefix + '/' + __model_dir_name + '/' + __quant_model_indir_name + '/' + __quant_model_name
-QUANT_SAVE_MODEL_PATH : str = __model_path_prefix + '/' + __model_dir_name + '/' + __quant_model_outdir_name + '/' + __quant_save_model_name
+QUANT_MODEL_PATH : str =                    user.__model_path_prefix + '/' \
+                                          + user.__model_dir_name + '/' \
+                                          + user.__quant_model_indir_name + '/' \
+                                          + user.__quant_model_name
+
+QUANT_SAVE_MODEL_PATH : str =               user.__model_path_prefix + '/' \
+                                          + user.__model_dir_name + '/' \
+                                          + user.__quant_model_outdir_name + '/' \
+                                          + user.__quant_save_model_name
 
 
-QUANT_DEVICE : str = __quant_device
-QUANT_EVAL_ENABLE : bool = __quant_eval_enable
+QUANT_DEVICE : str =                        user.__quant_device
+QUANT_EVAL_ENABLE : bool =                  user.__quant_eval_enable
 
-QUANT_DATASET_BATCH_SIZE : int = __quant_dataset_batch_size
-QUANT_VALSET_BATCH_SIZE : int = __quant_valset_batch_size
-QUANT_TESTSET_BATCH_SIZE : int = __quant_testset_batch_size
+QUANT_DATASET_BATCH_SIZE : int =            user.__quant_dataset_batch_size
+QUANT_VALSET_BATCH_SIZE : int =             user.__quant_valset_batch_size
+QUANT_TESTSET_BATCH_SIZE : int =            user.__quant_testset_batch_size
 
-QUANT_DATASET_NUM_WORKERS : int = __quant_dataset_num_workers
-QUANT_VALSET_NUM_WORKERS : int = __quant_valset_num_workers
-QUANT_TESTSET_NUM_WORKERS : int = __quant_testset_num_workers
+QUANT_DATASET_NUM_WORKERS : int =           user.__quant_dataset_num_workers
+QUANT_VALSET_NUM_WORKERS : int =            user.__quant_valset_num_workers
+QUANT_TESTSET_NUM_WORKERS : int =           user.__quant_testset_num_workers
 
 
 ####################################################
 # Evaluation Parameters
-EVAL_LOAD_MODEL_IS_QUANTIZED : bool = __eval_load_model_is_quantized
+EVAL_LOAD_MODEL_IS_QUANTIZED : bool =       user.__eval_load_model_is_quantized
+LOAD_SUPER_RAW = False
