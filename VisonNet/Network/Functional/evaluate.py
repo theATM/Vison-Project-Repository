@@ -6,11 +6,12 @@ import Network.Bank.bankset as bank
 import Network.Bank.banksethelpers as bah
 import Network.parameters as par
 import Network.Architecture.model as mod
-
-
+LOAD_TRAIN = False
+LOAD_VAL = False
+LOAD_TEST = True
 def main():
     #Load Data
-    _ , testloader,_  = bank.loadData(arg_load_train=False,arg_load_val=True,arg_load_test=False)
+    _ , _,testloader  = bank.loadData(arg_load_train=LOAD_TRAIN,arg_load_val=LOAD_VAL,arg_load_test=LOAD_TEST)
 
     #Define Eval Device
     eval_device = par.QUANT_DEVICE if par.EVAL_LOAD_MODEL_IS_QUANTIZED else par.TRAIN_DEVICE
@@ -25,7 +26,7 @@ def main():
 
     #Eval
     print("\nEvaluation Started")
-    print("Using Testset")
+    printdatasetName()
     used_model.model.eval()
     model_accuracy, _,_ = evaluate(used_model, testloader, eval_device)
     print('Evaluation Accuracy on all test images, %2.2f' % (model_accuracy.avg))
@@ -68,6 +69,13 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].contiguous().view(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+
+def printdatasetName():
+    if LOAD_TRAIN: print("Using Treinset")
+    if LOAD_VAL: print("Using Valset")
+    if LOAD_TEST: print("Using Testset")
+
 
 
 if __name__ == '__main__':

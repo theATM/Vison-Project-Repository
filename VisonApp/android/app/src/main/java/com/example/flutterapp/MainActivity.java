@@ -47,7 +47,8 @@ public class MainActivity extends FlutterActivity {
         // Here the Pretrained Neural Network Selection:
         // ORIGINAL : resnet_18_acc94_29.pt
         // BEST : resnet_18_acc94_29.pt
-        module = getModel("FourthGood240ResQuant92.pt");
+        // MYBEST : FifthGood100ResQuant95.pt
+        module = getModel("FifthGood100ResQuant95.pt");
         //module = getModel("rn18quantized20atm.pt");
     }
 

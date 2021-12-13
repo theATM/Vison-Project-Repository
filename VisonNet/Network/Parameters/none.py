@@ -1,0 +1,8 @@
+
+__data_path_prefix , __data_dir_name, __data_dataset_name, __data_testset_name, __data_valset_name, __data_dataset_batch_size, __data_valset_batch_size \
+, __data_testset_batch_size, __data_dataset_num_workers, __data_valset_num_workers, __data_testset_num_workers, __data_single_batch_test_enable \
+, __model_dir_name, __model_file_type ,__model_additional_dirs, __model_load_name, __model_load_raw_model_enable, __model_used_model_type, __train_max_epoch_number \
+, __train_device, __train_load_model_enable, __train_cudnn_enable, __train_cudnn_benchmark_enable, __train_initial_learning_rate, __train_scheduler_gamma \
+, __train_eval_per_epochs, __train_grad_per_batch, __train_print_per_batch , __quant_model_indir_name, __quant_model_outdir_name, __quant_model_name, __quant_save_model_name \
+, __quant_device, __quant_eval_enable, __quant_dataset_batch_size, __quant_valset_batch_size, __quant_testset_batch_size, __quant_dataset_num_workers \
+, __quant_valset_num_workers, __quant_testset_num_workers, __eval_load_model_is_quantized = None

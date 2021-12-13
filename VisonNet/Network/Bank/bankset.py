@@ -147,6 +147,10 @@ def loadData(arg_load_train = True, arg_load_val = True, arg_load_test = True,
         return
     else:
         print("Successfully")
+        print("Images used")
+        if arg_load_train: print(f"Trainset {trainset.__len__()}")
+        if arg_load_val: print(f"Valset {valset.__len__()}")
+        if arg_load_test: print(f"Testset {testset.__len__()}")
 
     if single_batch_test is True:
         #Preform Single Batch Test
