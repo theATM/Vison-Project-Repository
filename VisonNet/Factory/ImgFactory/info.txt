@@ -1,0 +1,7 @@
+Here you can compress images to 244:244p - linux only or docker!
+Run this script:
+- ffmpegCompressImages.sh - run this bash script on Linux
+You should first create 2 directories / folders :
+- waiting - here insert the images -they must be inside a subdirectory -  you want to be compressed
+- compressed - here (inside the folder you creted for images) will be saved all compressed images
+

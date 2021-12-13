@@ -1,1 +1,0 @@
-find . -mindepth 1 -prune -type d -exec sh -c 'd="{}"; mv -- "$d" "${d}_10"' \;

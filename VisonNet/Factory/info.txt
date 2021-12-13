@@ -1,1 +1,14 @@
-This is file dedicated to all data (image/movie) related scripts.
+This is Factory directory,
+dedicated to all data (image/movie) related scripts.
+There are 3 different Factories: imgFactory MovFactory and rotateFactory.
+Most of them require Linux to run - rotateScript uses python,
+that is why there are also docker scripts, you can use to build your own container to run those scripts
+Just Run DockerBuild.bat/.sh
+Then DockerRun.bat/.sh
+Mind that it was mostly tested on linux.
+And you should have acces to the container
+then run all scripts from that container (using bash)
+For more info how to run specific factory go to thatFactory/info.txt
+
+This is very usefull Linux command to bulk rename files
+find . -mindepth 1 -prune -type d -exec sh -c 'd="{}"; mv -- "$d" "${d}_10"' \;
