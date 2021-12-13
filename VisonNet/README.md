@@ -1,11 +1,11 @@
-## Polish Banknote Recognition Neural Network
+## VisonNet - Polish Banknote Recognition Neural Network
 This is directory with implementation of a neural network training program.
 In this repository you can find script to train ResNet18 and Mobilenetv2
 based neural network to recognize polish banknotes. 
 Also we've attached quantisation script which helps in neural net static quantisation (Resnet18 only)
 to reduce it size and give performance boost on mobile devices.
 
-###Requirements
+### Requirements
 This program uses Python 3.7.12
 Preferred OS is Linux (for windows there is a dockerfile)
 Used with CUDA 11.4 and CuDNN 8.2.4
@@ -21,48 +21,48 @@ Rest of requirements (not mentioned yet) are in requirements.txt to install it u
 pip3 install requirements.txt
 Best to use with venv environment
 
-###Usable scripts:
+### Usable scripts:
 
 All runnable scripts have main function attached 
 Look for ^__main__^
 
-####Major ones are in Functional directory
+#### Major ones are in Functional directory
 - training.py
 - evaluate.py
 - staticquant.py
 
-####Minor ones are in Tools directory
+#### Minor ones are in Tools directory
 - assesment-py
 - imgtest.py
 - resave.py
 - rotateimg.py
 - transplot.py
 
-###Data:
+### Data:
 - Images of PLN banknotes 244:244p
 Datasets should be inserted into 
 VisonNet/Data directory
 (create dataset, testset and valset)
 
 
-###Parameters:
+### Parameters:
 - To train efficiently create Parameter Profile or use default
 to modify program behaviour
 
-###To use scripts:
+### To use scripts:
 - run them in Pycharm or other IDE, or in python 
 
-###Results:
+### Results:
 - The team trained Resnet18 model to 96.5% accuracy after quantisation
 - The team trained Mobilenetv2 model to 93% accuracy after quantisation
 
-###Authors:
+### Authors:
 - Aleksander Madajczak
 - Kamil Pokornicki
 - Karol Dziki
 
 
-###Credits:
+### Credits:
 This program is based on Polish Banknote Recognition Neural Network
 
 Linked by https://www.kaggle.com/bartomiejgawrych/polish-banknotes-polskie-banknoty
