@@ -16,6 +16,9 @@ Data/*
 Models/*
 #Except for the info file
 !Models/info.txt
+#And Except Logs dir and script
+Models/Logs/*
+!Models/Logs/copylastlog.sh
 
 #Don't add venv (they contain all installed libs) into repo (many GB)
 Environment/visonvenv/*
