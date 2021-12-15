@@ -44,6 +44,9 @@ Datasets should be inserted into
 VisonNet/Data directory
 (create dataset, testset and valset)
 
+Link to data:
+www.kaggle.com/dataset/99636797e98397fa6161113867b50bed663be07900885852cda713b1cc76e52d
+
 
 ### Parameters:
 - To train efficiently create Parameter Profile or use default
