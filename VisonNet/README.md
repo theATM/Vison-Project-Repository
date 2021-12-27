@@ -64,6 +64,8 @@ to modify program behaviour
 - Kamil Pokornicki
 - Karol Dziki
 
+### Continuation
+If one wants to continue this project, advised is to get in touch with authors
 
 ### Credits:
 This program is based on Polish Banknote Recognition Neural Network
